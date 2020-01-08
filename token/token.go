@@ -16,8 +16,12 @@ const (
 
 	LParen = "("
 	RParen = ")"
+	LBrace = "{"
+	RBrace = "}"
 
 	Ident = "ident"
+
+	Function = "fn"
 )
 
 type TokenType string
@@ -25,4 +29,16 @@ type TokenType string
 type Token struct {
 	Type  TokenType
 	Value string
+}
+
+var keywords = map[string]TokenType{
+	"fn": Function,
+}
+
+func LookupIdent(ident string) TokenType {
+	if keywordToken, ok := keywords[ident]; ok {
+		return keywordToken
+	}
+
+	return Ident
 }

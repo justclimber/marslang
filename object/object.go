@@ -12,6 +12,7 @@ const (
 	BooleanObj     = "bool"
 	NullObj        = "null"
 	ReturnValueObj = "return_value"
+	FunctionObj    = "function_obj"
 )
 
 type Object interface {
@@ -20,6 +21,7 @@ type Object interface {
 }
 
 type IIdentifier interface{}
+type IStatements interface{}
 
 type Integer struct {
 	Value int64
@@ -53,3 +55,13 @@ type ReturnValue struct {
 
 func (rv *ReturnValue) Type() ObjectType { return ReturnValueObj }
 func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
+
+type Function struct {
+	Statements interface{}
+	Env        *Environment
+}
+
+func (f *Function) Type() ObjectType { return FunctionObj }
+func (f *Function) Inspect() string {
+	return "function"
+}

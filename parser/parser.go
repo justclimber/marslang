@@ -62,6 +62,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerUnaryFunction(token.NumFloat, p.parseReal)
 	p.registerUnaryFunction(token.Ident, p.parseIdentifier)
 	p.registerUnaryFunction(token.LParen, p.parseGroupedExpression)
+	p.registerUnaryFunction(token.Function, p.parseFunction)
 
 	p.binOpFunctions = make(map[token.TokenType]binOpFunctions)
 	p.registerBinOpFunction(token.Plus, p.parseBinOperation)
@@ -80,20 +81,27 @@ func (p *Parser) read() {
 
 func (p *Parser) Parse() (*ast.Program, error) {
 	program := &ast.Program{}
-	program.Statements = []ast.IStatement{}
 
-	for p.currToken.Type != token.EOF {
+	statements, err := p.parseBlockOfStatements(token.EOF)
+	program.Statements = statements
+
+	return program, err
+}
+
+func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.IStatement, error) {
+	var statements []ast.IStatement
+
+	for p.currToken.Type != terminatedToken {
 		stmt, err := p.parseStatement()
 		if err != nil {
 			return nil, err
 		}
 		if stmt != nil {
-			program.Statements = append(program.Statements, stmt)
+			statements = append(statements, stmt)
 		}
 		p.read()
 	}
-
-	return program, nil
+	return statements, nil
 }
 
 func (p *Parser) parseStatement() (ast.IStatement, error) {
@@ -211,6 +219,41 @@ func (p *Parser) parseBinOperation(left ast.IExpression) (ast.IExpression, error
 	}
 
 	return expression, nil
+}
+
+func (p *Parser) parseFunction() (ast.IExpression, error) {
+	function := &ast.Function{Token: p.currToken}
+
+	p.read()
+	_, err := p.getExpectedToken(token.LParen)
+	if err != nil {
+		return nil, err
+	}
+
+	// todo: парсинг параметров
+	p.read()
+	_, err = p.getExpectedToken(token.RParen)
+	if err != nil {
+		return nil, err
+	}
+
+	p.read()
+	_, err = p.getExpectedToken(token.LBrace)
+	if err != nil {
+		return nil, err
+	}
+
+	p.read()
+	_, err = p.getExpectedToken(token.EOL)
+	if err != nil {
+		return nil, err
+	}
+
+	p.read()
+	statements, err := p.parseBlockOfStatements(token.RBrace)
+	function.Statements = statements
+
+	return function, err
 }
 
 func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {

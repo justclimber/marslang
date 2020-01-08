@@ -44,6 +44,8 @@ func (l *Lexer) NextToken() token.Token {
 		token.Slash,
 		token.LParen,
 		token.RParen,
+		token.LBrace,
+		token.RBrace,
 	}
 	for _, simpleToken := range simpleTokens {
 		if string(l.currChar) == simpleToken {
@@ -71,8 +73,8 @@ func (l *Lexer) NextToken() token.Token {
 				currToken.Type = token.NumFloat
 			}
 		} else if unicode.IsLetter(l.currChar) {
-			currToken.Type = token.Ident
 			currToken.Value = l.readIdentifier()
+			currToken.Type = token.LookupIdent(currToken.Value)
 		} else {
 			l.error("Unexpected symbol: " + string(l.currChar))
 		}
@@ -83,7 +85,7 @@ func (l *Lexer) NextToken() token.Token {
 
 func (l *Lexer) error(errorMsg string) {
 	line, pos := l.GetCurrLineAndPos()
-	log.Fatalf("Error: %s\nline:%d, pos %d", errorMsg, line, pos)
+	log.Fatalf("Lexer error: %s\nline:%d, pos %d", errorMsg, line, pos)
 }
 
 func (l *Lexer) GetCurrLineAndPos() (int, int) {

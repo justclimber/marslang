@@ -123,3 +123,15 @@ type NumFloat struct {
 func (node *NumFloat) Exec(env *object.Environment) (object.Object, error) {
 	return &object.Float{Value: node.Value}, nil
 }
+
+type Function struct {
+	Token      token.Token
+	Statements []IStatement
+}
+
+func (node *Function) Exec(env *object.Environment) (object.Object, error) {
+	return &object.Function{
+		Statements: node.Statements,
+		Env:        env,
+	}, nil
+}

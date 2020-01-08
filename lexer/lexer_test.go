@@ -9,7 +9,9 @@ import (
 
 func TestNextTokenGeneric(t *testing.T) {
 	input := `a = (5 + 6)
-b = 3`
+b = 3
+c = fn() {
+}`
 
 	tests := []struct {
 		expectedType  token.TokenType
@@ -26,6 +28,15 @@ b = 3`
 		{token.Ident, "b"},
 		{token.Assignment, "="},
 		{token.NumInt, "3"},
+		{token.EOL, ""},
+		{token.Ident, "c"},
+		{token.Assignment, "="},
+		{token.Function, "fn"},
+		{token.LParen, "("},
+		{token.RParen, ")"},
+		{token.LBrace, "{"},
+		{token.EOL, ""},
+		{token.RBrace, "}"},
 		{token.EOF, ""},
 	}
 

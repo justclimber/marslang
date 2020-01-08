@@ -39,3 +39,19 @@ func TestParseReal(t *testing.T) {
 	assignStmt, _ := astProgram.Statements[0].(*ast.Assignment)
 	assert.IsType(t, &ast.NumFloat{}, assignStmt.Value)
 }
+
+func TestParseFunction(t *testing.T) {
+	input := `a = fn() {
+   b = 2
+}
+`
+	l := lexer.New(input)
+	p := New(l)
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	require.Len(t, astProgram.Statements, 1)
+	assert.IsType(t, &ast.Assignment{}, astProgram.Statements[0])
+	assignStmt, _ := astProgram.Statements[0].(*ast.Assignment)
+	assert.IsType(t, &ast.Function{}, assignStmt.Value)
+}
