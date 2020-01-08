@@ -115,11 +115,11 @@ func (node *NumInt) Exec(env *object.Environment) (object.Object, error) {
 	return &object.Integer{Value: node.Value}, nil
 }
 
-type NumReal struct {
+type NumFloat struct {
 	Token token.Token
 	Value float64
 }
 
-func (node *NumReal) Exec(env *object.Environment) (object.Object, error) {
+func (node *NumFloat) Exec(env *object.Environment) (object.Object, error) {
 	return &object.Float{Value: node.Value}, nil
 }

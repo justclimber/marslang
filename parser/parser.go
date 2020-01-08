@@ -59,7 +59,7 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.unaryFunctions = make(map[token.TokenType]unaryFunction)
 	p.registerUnaryFunction(token.NumInt, p.parseInteger)
-	p.registerUnaryFunction(token.NumReal, p.parseReal)
+	p.registerUnaryFunction(token.NumFloat, p.parseReal)
 	p.registerUnaryFunction(token.Ident, p.parseIdentifier)
 
 	p.binOpFunctions = make(map[token.TokenType]binOpFunctions)
@@ -182,7 +182,7 @@ func (p *Parser) parseInteger() (ast.IExpression, error) {
 }
 
 func (p *Parser) parseReal() (ast.IExpression, error) {
-	node := &ast.NumReal{Token: p.currToken}
+	node := &ast.NumFloat{Token: p.currToken}
 
 	value, err := strconv.ParseFloat(p.currToken.Value, 64)
 	if err != nil {

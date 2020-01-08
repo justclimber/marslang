@@ -37,5 +37,5 @@ func TestParseReal(t *testing.T) {
 	require.Len(t, astProgram.Statements, 1)
 	assert.IsType(t, &ast.Assignment{}, astProgram.Statements[0])
 	assignStmt, _ := astProgram.Statements[0].(*ast.Assignment)
-	assert.IsType(t, &ast.NumReal{}, assignStmt.Value)
+	assert.IsType(t, &ast.NumFloat{}, assignStmt.Value)
 }

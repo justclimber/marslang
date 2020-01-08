@@ -10,8 +10,8 @@ const (
 	Asterisk   = "*"
 	Slash      = "/"
 
-	NumInt  = "int_num"
-	NumReal = "real_num"
+	NumInt   = "int_num"
+	NumFloat = "float_num"
 
 	Ident = "ident"
 )

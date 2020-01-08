@@ -45,7 +45,7 @@ func TestReal(t *testing.T) {
 	}{
 		{token.Ident, "a"},
 		{token.Assignment, "="},
-		{token.NumReal, "5.6"},
+		{token.NumFloat, "5.6"},
 		{token.EOF, ""},
 	}
 
@@ -67,7 +67,7 @@ func TestRealShort(t *testing.T) {
 	}{
 		{token.Ident, "a"},
 		{token.Assignment, "="},
-		{token.NumReal, "5."},
+		{token.NumFloat, "5."},
 		{token.EOF, ""},
 	}
 

@@ -66,7 +66,7 @@ func (l *Lexer) NextToken() token.Token {
 			if isInt {
 				currToken.Type = token.NumInt
 			} else {
-				currToken.Type = token.NumReal
+				currToken.Type = token.NumFloat
 			}
 		} else if unicode.IsLetter(l.currChar) {
 			currToken.Type = token.Ident
