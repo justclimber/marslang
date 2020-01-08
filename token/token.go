@@ -5,13 +5,17 @@ const (
 	EOF = "EOF"
 
 	Assignment = "="
-	Plus       = "+"
-	Minus      = "-"
-	Asterisk   = "*"
-	Slash      = "/"
+
+	Plus     = "+"
+	Minus    = "-"
+	Asterisk = "*"
+	Slash    = "/"
 
 	NumInt   = "int_num"
 	NumFloat = "float_num"
+
+	LParen = "("
+	RParen = ")"
 
 	Ident = "ident"
 )

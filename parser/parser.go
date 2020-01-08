@@ -61,6 +61,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerUnaryFunction(token.NumInt, p.parseInteger)
 	p.registerUnaryFunction(token.NumFloat, p.parseReal)
 	p.registerUnaryFunction(token.Ident, p.parseIdentifier)
+	p.registerUnaryFunction(token.LParen, p.parseGroupedExpression)
 
 	p.binOpFunctions = make(map[token.TokenType]binOpFunctions)
 	p.registerBinOpFunction(token.Plus, p.parseBinOperation)
@@ -145,10 +146,10 @@ func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
 	}
 
 	nextPrecedence := p.nextPrecedence()
-	for !(p.nextToken.Type == token.EOL) && precedence < nextPrecedence {
+	for !(p.nextToken.Type == token.EOL) && !(p.nextToken.Type == token.RParen) && precedence < nextPrecedence {
 		binOpFunction := p.binOpFunctions[p.nextToken.Type]
 		if binOpFunction == nil {
-			err := p.parseError(fmt.Sprintf("Unexpected token '%s'", p.currToken.Type))
+			err := p.parseError(fmt.Sprintf("Unexpected token '%s'", p.nextToken.Type))
 			return nil, err
 		}
 
@@ -205,6 +206,22 @@ func (p *Parser) parseBinOperation(left ast.IExpression) (ast.IExpression, error
 	p.read()
 	var err error
 	expression.Right, err = p.parseExpression(precedence)
+	if err != nil {
+		return nil, err
+	}
+
+	return expression, nil
+}
+
+func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {
+	p.read()
+
+	expression, err := p.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+	p.read()
+	_, err = p.getExpectedToken(token.RParen)
 	if err != nil {
 		return nil, err
 	}

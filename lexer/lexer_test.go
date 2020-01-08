@@ -7,8 +7,8 @@ import (
 	"aakimov/marslang/token"
 )
 
-func TestNextToken(t *testing.T) {
-	input := `a = 5 + 6
+func TestNextTokenGeneric(t *testing.T) {
+	input := `a = (5 + 6)
 b = 3`
 
 	tests := []struct {
@@ -17,9 +17,11 @@ b = 3`
 	}{
 		{token.Ident, "a"},
 		{token.Assignment, "="},
+		{token.LParen, "("},
 		{token.NumInt, "5"},
 		{token.Plus, "+"},
 		{token.NumInt, "6"},
+		{token.RParen, ")"},
 		{token.EOL, ""},
 		{token.Ident, "b"},
 		{token.Assignment, "="},

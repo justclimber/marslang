@@ -42,6 +42,8 @@ func (l *Lexer) NextToken() token.Token {
 		token.Minus,
 		token.Asterisk,
 		token.Slash,
+		token.LParen,
+		token.RParen,
 	}
 	for _, simpleToken := range simpleTokens {
 		if string(l.currChar) == simpleToken {
