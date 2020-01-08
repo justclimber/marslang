@@ -32,7 +32,7 @@ var precedences = map[token.TokenType]int{
 	token.Minus:      Sum,
 	token.Slash:      Product,
 	token.Asterisk:   Product,
-	//token.LPAREN:   Call,
+	token.LParen:     Call,
 	//token.LBRAKET:  Index,
 }
 
@@ -70,6 +70,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerBinOpFunction(token.Slash, p.parseBinOperation)
 	p.registerBinOpFunction(token.Asterisk, p.parseBinOperation)
 	p.registerBinOpFunction(token.Assignment, p.parseBinOperation)
+	p.registerBinOpFunction(token.LParen, p.parseFunctionCall)
 
 	return p
 }
@@ -79,8 +80,8 @@ func (p *Parser) read() {
 	p.nextToken = p.l.NextToken()
 }
 
-func (p *Parser) Parse() (*ast.Program, error) {
-	program := &ast.Program{}
+func (p *Parser) Parse() (*ast.StatementsBlock, error) {
+	program := &ast.StatementsBlock{}
 
 	statements, err := p.parseBlockOfStatements(token.EOF)
 	program.Statements = statements
@@ -251,9 +252,25 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 
 	p.read()
 	statements, err := p.parseBlockOfStatements(token.RBrace)
-	function.Statements = statements
+	statementsBlock := ast.StatementsBlock{Statements: statements}
+	function.StatementsBlock = statementsBlock
 
 	return function, err
+}
+
+func (p *Parser) parseFunctionCall(function ast.IExpression) (ast.IExpression, error) {
+	expression := &ast.FunctionCall{
+		Token:    p.currToken,
+		Function: function,
+	}
+	p.read()
+
+	_, err := p.getExpectedToken(token.RParen)
+	if err != nil {
+		return nil, err
+	}
+
+	return expression, nil
 }
 
 func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {

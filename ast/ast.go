@@ -20,11 +20,11 @@ type IStatement interface {
 	Exec(env *object.Environment) error
 }
 
-type Program struct {
+type StatementsBlock struct {
 	Statements []IStatement
 }
 
-func (node *Program) Exec(env *object.Environment) (object.Object, error) {
+func (node *StatementsBlock) Exec(env *object.Environment) (object.Object, error) {
 	var result object.Object
 	var err error
 
@@ -125,13 +125,42 @@ func (node *NumFloat) Exec(env *object.Environment) (object.Object, error) {
 }
 
 type Function struct {
-	Token      token.Token
-	Statements []IStatement
+	Token           token.Token
+	StatementsBlock StatementsBlock
 }
 
 func (node *Function) Exec(env *object.Environment) (object.Object, error) {
 	return &object.Function{
-		Statements: node.Statements,
+		Statements: node.StatementsBlock,
 		Env:        env,
 	}, nil
+}
+
+type FunctionCall struct {
+	Token    token.Token
+	Function IExpression
+}
+
+func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
+	functionObj, err := node.Function.Exec(env)
+	if err != nil {
+		return nil, err
+	}
+	switch fn := functionObj.(type) {
+
+	case *object.Function:
+		statementsBlock, ok := fn.Statements.(StatementsBlock)
+		if !ok {
+			return nil, errors.New(fmt.Sprintf("Unexpected type for function body: %T", fn.Statements))
+		}
+		result, err := statementsBlock.Exec(env)
+		result = &object.Integer{Value: int64(5)} // its a hack! todo: remove
+		return result, err
+
+	//case *object.Builtin:
+	//	return fn.Fn(args...)
+
+	default:
+		return nil, errors.New(fmt.Sprintf("not a function: %s", fn.Type()))
+	}
 }

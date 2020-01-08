@@ -44,14 +44,19 @@ func TestParseFunction(t *testing.T) {
 	input := `a = fn() {
    b = 2
 }
+c = a()
 `
 	l := lexer.New(input)
 	p := New(l)
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
-	require.Len(t, astProgram.Statements, 1)
+	require.Len(t, astProgram.Statements, 2)
 	assert.IsType(t, &ast.Assignment{}, astProgram.Statements[0])
 	assignStmt, _ := astProgram.Statements[0].(*ast.Assignment)
 	assert.IsType(t, &ast.Function{}, assignStmt.Value)
+
+	assert.IsType(t, &ast.Assignment{}, astProgram.Statements[1])
+	assignStmt2, _ := astProgram.Statements[1].(*ast.Assignment)
+	assert.IsType(t, &ast.FunctionCall{}, assignStmt2.Value)
 }
