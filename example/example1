@@ -1,4 +1,4 @@
-c = fn() {
-   return 10
+c = fn() int {
+   return 3
 }
 a = c()

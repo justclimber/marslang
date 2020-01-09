@@ -58,6 +58,7 @@ func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
 
 type Function struct {
 	Statements interface{}
+	ReturnType string
 	Env        *Environment
 }
 

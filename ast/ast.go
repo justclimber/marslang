@@ -31,7 +31,7 @@ func (node *StatementsBlock) Exec(env *object.Environment) (object.Object, error
 			return nil, err
 		}
 		if returnStmt, ok := result.(*object.ReturnValue); ok {
-			return returnStmt, nil
+			return returnStmt.Value, nil
 		}
 		// if result is not return - ignore. Statements not return anything else
 	}
@@ -138,12 +138,14 @@ func (node *NumFloat) Exec(env *object.Environment) (object.Object, error) {
 
 type Function struct {
 	Token           token.Token
+	ReturnType      string
 	StatementsBlock StatementsBlock
 }
 
 func (node *Function) Exec(env *object.Environment) (object.Object, error) {
 	return &object.Function{
 		Statements: node.StatementsBlock,
+		ReturnType: node.ReturnType,
 		Env:        env,
 	}, nil
 }
@@ -166,7 +168,25 @@ func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
 			return nil, errors.New(fmt.Sprintf("Unexpected type for function body: %T", fn.Statements))
 		}
 		result, err := statementsBlock.Exec(env)
-		return result, err
+		if err != nil {
+			return nil, err
+		}
+
+		// return type check
+		if result == nil && fn.ReturnType != "void" {
+			return nil, errors.New(fmt.Sprintf(
+				"Return type mismatch: function declared to return '%s' but in fact has no return",
+				fn.ReturnType))
+		} else if result != nil && fn.ReturnType == "void" {
+			return nil, errors.New(fmt.Sprintf(
+				"Return type mismatch: function declared as void but in fact return '%s'",
+				result.Type()))
+		} else if result != nil && fn.ReturnType != "void" && result.Type() != object.ObjectType(fn.ReturnType) {
+			return nil, errors.New(fmt.Sprintf(
+				"Return type mismatch: function declared to return '%s' but in fact return '%s'",
+				fn.ReturnType, result.Type()))
+		}
+		return result, nil
 
 	//case *object.Builtin:
 	//	return fn.Fn(args...)

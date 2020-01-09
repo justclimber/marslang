@@ -41,7 +41,7 @@ func TestParseReal(t *testing.T) {
 }
 
 func TestParseFunctionAndFunctionCall(t *testing.T) {
-	input := `a = fn() {
+	input := `a = fn() int {
    return 2
 }
 c = a()

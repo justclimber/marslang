@@ -10,7 +10,7 @@ import (
 func TestNextTokenGeneric(t *testing.T) {
 	input := `a = (5 + 6)
 b = 3
-c = fn() {
+c = fn() int {
    return 3
 }`
 
@@ -35,6 +35,7 @@ c = fn() {
 		{token.Function, "fn"},
 		{token.LParen, "("},
 		{token.RParen, ")"},
+		{token.Type, "int"},
 		{token.LBrace, "{"},
 		{token.EOL, ""},
 		{token.Return, "return"},

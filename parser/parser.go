@@ -263,6 +263,13 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 	}
 
 	p.read()
+	typeToken, err := p.getExpectedToken(token.Type)
+	if err != nil {
+		return nil, err
+	}
+	function.ReturnType = typeToken.Value
+
+	p.read()
 	_, err = p.getExpectedToken(token.LBrace)
 	if err != nil {
 		return nil, err
