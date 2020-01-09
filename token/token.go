@@ -22,6 +22,7 @@ const (
 	Ident = "ident"
 
 	Function = "fn"
+	Return   = "return"
 )
 
 type TokenType string
@@ -32,7 +33,8 @@ type Token struct {
 }
 
 var keywords = map[string]TokenType{
-	"fn": Function,
+	"fn":     Function,
+	"return": Return,
 }
 
 func LookupIdent(ident string) TokenType {

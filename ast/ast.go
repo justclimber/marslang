@@ -17,7 +17,7 @@ type IExpression interface {
 
 type IStatement interface {
 	Node
-	Exec(env *object.Environment) error
+	Exec(env *object.Environment) (object.Object, error)
 }
 
 type StatementsBlock struct {
@@ -25,17 +25,18 @@ type StatementsBlock struct {
 }
 
 func (node *StatementsBlock) Exec(env *object.Environment) (object.Object, error) {
-	var result object.Object
-	var err error
-
 	for _, statement := range node.Statements {
-		err = statement.Exec(env)
+		result, err := statement.Exec(env)
 		if err != nil {
 			return nil, err
 		}
+		if returnStmt, ok := result.(*object.ReturnValue); ok {
+			return returnStmt, nil
+		}
+		// if result is not return - ignore. Statements not return anything else
 	}
 
-	return result, err
+	return nil, nil
 }
 
 type Assignment struct {
@@ -44,19 +45,19 @@ type Assignment struct {
 	Value IExpression
 }
 
-func (node *Assignment) Exec(env *object.Environment) error {
+func (node *Assignment) Exec(env *object.Environment) (object.Object, error) {
 	value, err := node.Value.Exec(env)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	varName := node.Name.Value
 	if oldVar, isVarExist := env.Get(varName); isVarExist && oldVar.Type() != value.Type() {
-		return errors.New(fmt.Sprintf("type mismatch on assinment: var type is %s and value type is %s",
+		return nil, errors.New(fmt.Sprintf("type mismatch on assinment: var type is %s and value type is %s",
 			oldVar.Type(), value.Type()))
 	}
 
 	env.Set(varName, value)
-	return nil
+	return nil, nil
 }
 
 type Expression struct {
@@ -111,6 +112,17 @@ type NumInt struct {
 	Value int64
 }
 
+type Return struct {
+	Token       token.Token
+	ReturnValue IExpression
+}
+
+func (node *Return) Exec(env *object.Environment) (object.Object, error) {
+	value, err := node.ReturnValue.Exec(env)
+
+	return &object.ReturnValue{Value: value}, err
+}
+
 func (node *NumInt) Exec(env *object.Environment) (object.Object, error) {
 	return &object.Integer{Value: node.Value}, nil
 }
@@ -154,7 +166,6 @@ func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
 			return nil, errors.New(fmt.Sprintf("Unexpected type for function body: %T", fn.Statements))
 		}
 		result, err := statementsBlock.Exec(env)
-		result = &object.Integer{Value: int64(5)} // its a hack! todo: remove
 		return result, err
 
 	//case *object.Builtin:

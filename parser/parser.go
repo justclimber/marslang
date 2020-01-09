@@ -106,8 +106,18 @@ func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.
 }
 
 func (p *Parser) parseStatement() (ast.IStatement, error) {
-	astNode, err := p.parseAssignment()
-	return astNode, err
+	switch p.currToken.Type {
+	case token.Ident:
+		astNode, err := p.parseAssignment()
+		return astNode, err
+	case token.Return:
+		astNode, err := p.parseReturn()
+		return astNode, err
+	case token.EOL:
+		return nil, nil
+	default:
+		return nil, p.parseError(fmt.Sprintf("Unexpected token for start of statement: %s\n", p.currToken.Type))
+	}
 }
 
 func (p *Parser) parseAssignment() (*ast.Assignment, error) {
@@ -140,6 +150,20 @@ func (p *Parser) parseAssignment() (*ast.Assignment, error) {
 	}
 
 	return assignStmt, nil
+}
+
+func (p *Parser) parseReturn() (*ast.Return, error) {
+	stmt := &ast.Return{Token: p.currToken}
+	p.read()
+
+	var err error
+	stmt.ReturnValue, err = p.parseExpression(Lowest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {

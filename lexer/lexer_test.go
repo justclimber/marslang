@@ -11,6 +11,7 @@ func TestNextTokenGeneric(t *testing.T) {
 	input := `a = (5 + 6)
 b = 3
 c = fn() {
+   return 3
 }`
 
 	tests := []struct {
@@ -35,6 +36,9 @@ c = fn() {
 		{token.LParen, "("},
 		{token.RParen, ")"},
 		{token.LBrace, "{"},
+		{token.EOL, ""},
+		{token.Return, "return"},
+		{token.NumInt, "3"},
 		{token.EOL, ""},
 		{token.RBrace, "}"},
 		{token.EOF, ""},

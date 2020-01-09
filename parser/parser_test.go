@@ -40,9 +40,9 @@ func TestParseReal(t *testing.T) {
 	assert.IsType(t, &ast.NumFloat{}, assignStmt.Value)
 }
 
-func TestParseFunction(t *testing.T) {
+func TestParseFunctionAndFunctionCall(t *testing.T) {
 	input := `a = fn() {
-   b = 2
+   return 2
 }
 c = a()
 `
@@ -55,6 +55,13 @@ c = a()
 	assert.IsType(t, &ast.Assignment{}, astProgram.Statements[0])
 	assignStmt, _ := astProgram.Statements[0].(*ast.Assignment)
 	assert.IsType(t, &ast.Function{}, assignStmt.Value)
+
+	function, _ := assignStmt.Value.(*ast.Function)
+	require.Len(t, function.StatementsBlock.Statements, 1)
+	assert.IsType(t, &ast.Return{}, function.StatementsBlock.Statements[0])
+
+	returnStmt, _ := function.StatementsBlock.Statements[0].(*ast.Return)
+	assert.IsType(t, &ast.NumInt{}, returnStmt.ReturnValue)
 
 	assert.IsType(t, &ast.Assignment{}, astProgram.Statements[1])
 	assignStmt2, _ := astProgram.Statements[1].(*ast.Assignment)
