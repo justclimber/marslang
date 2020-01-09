@@ -5,6 +5,7 @@ const (
 	EOF = "EOF"
 
 	Assignment = "="
+	Comma      = ","
 
 	Plus     = "+"
 	Minus    = "-"

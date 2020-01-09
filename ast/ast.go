@@ -138,21 +138,30 @@ func (node *NumFloat) Exec(env *object.Environment) (object.Object, error) {
 
 type Function struct {
 	Token           token.Token
+	Arguments       []*FunctionArg
 	ReturnType      string
 	StatementsBlock StatementsBlock
 }
 
 func (node *Function) Exec(env *object.Environment) (object.Object, error) {
 	return &object.Function{
+		Arguments:  node.Arguments,
 		Statements: node.StatementsBlock,
 		ReturnType: node.ReturnType,
 		Env:        env,
 	}, nil
 }
 
+type FunctionArg struct {
+	Token   token.Token
+	ArgType string
+	Arg     *Identifier
+}
+
 type FunctionCall struct {
-	Token    token.Token
-	Function IExpression
+	Token     token.Token
+	Function  IExpression
+	Arguments []IExpression
 }
 
 func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
@@ -167,7 +176,18 @@ func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
 		if !ok {
 			return nil, errors.New(fmt.Sprintf("Unexpected type for function body: %T", fn.Statements))
 		}
-		result, err := statementsBlock.Exec(env)
+
+		args, err := execExpressionList(node.Arguments, env)
+		if err != nil {
+			return nil, err
+		}
+		err = functionCallArgumentsCheck(fn, args)
+		if err != nil {
+			return nil, err
+		}
+
+		functionEnv := transferArgsToNewEnv(fn, args)
+		result, err := statementsBlock.Exec(functionEnv)
 		if err != nil {
 			return nil, err
 		}
@@ -194,4 +214,42 @@ func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
 	default:
 		return nil, errors.New(fmt.Sprintf("not a function: %s", fn.Type()))
 	}
+}
+
+func execExpressionList(expressions []IExpression, env *object.Environment) ([]object.Object, error) {
+	var result []object.Object
+
+	for _, e := range expressions {
+		evaluated, err := e.Exec(env)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, evaluated)
+	}
+
+	return result, nil
+}
+
+func functionCallArgumentsCheck(fn *object.Function, args []object.Object) error {
+	functionArguments, _ := fn.Arguments.([]*FunctionArg)
+
+	if len(functionArguments) != len(args) {
+		return errors.New(fmt.Sprintf("Function call arguments count micmatch: dectlared %d, but called %d",
+			len(functionArguments), len(args)))
+	}
+
+	//todo: type checking
+	return nil
+}
+
+func transferArgsToNewEnv(fn *object.Function, args []object.Object) *object.Environment {
+	env := object.NewEnclosedEnvironment(fn.Env)
+
+	functionArguments, _ := fn.Arguments.([]*FunctionArg)
+
+	for i, arg := range functionArguments {
+		env.Set(arg.Arg.Value, args[i])
+	}
+
+	return env
 }

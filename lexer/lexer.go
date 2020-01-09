@@ -38,6 +38,7 @@ func (l *Lexer) NextToken() token.Token {
 
 	simpleTokens := []string{
 		token.Assignment,
+		token.Comma,
 		token.Plus,
 		token.Minus,
 		token.Asterisk,

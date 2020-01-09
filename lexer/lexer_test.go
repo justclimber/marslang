@@ -10,8 +10,8 @@ import (
 func TestNextTokenGeneric(t *testing.T) {
 	input := `a = (5 + 6)
 b = 3
-c = fn() int {
-   return 3
+c = fn(int a, int b) int {
+   return 3 + a
 }`
 
 	tests := []struct {
@@ -34,12 +34,19 @@ c = fn() int {
 		{token.Assignment, "="},
 		{token.Function, "fn"},
 		{token.LParen, "("},
+		{token.Type, "int"},
+		{token.Var, "a"},
+		{token.Comma, ","},
+		{token.Type, "int"},
+		{token.Var, "b"},
 		{token.RParen, ")"},
 		{token.Type, "int"},
 		{token.LBrace, "{"},
 		{token.EOL, ""},
 		{token.Return, "return"},
 		{token.NumInt, "3"},
+		{token.Plus, "+"},
+		{token.Var, "a"},
 		{token.EOL, ""},
 		{token.RBrace, "}"},
 		{token.EOF, ""},

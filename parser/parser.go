@@ -265,8 +265,12 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 		return nil, err
 	}
 
-	// todo: парсинг параметров
 	p.read()
+	function.Arguments, err = p.parseFunctionArgs()
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = p.getExpectedToken(token.RParen)
 	if err != nil {
 		return nil, err
@@ -299,19 +303,81 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 	return function, err
 }
 
+func (p *Parser) parseFunctionArgs() ([]*ast.FunctionArg, error) {
+	arguments := make([]*ast.FunctionArg, 0)
+
+	for p.currToken.Type == token.Type {
+		argument := &ast.FunctionArg{
+			Token:   p.currToken,
+			ArgType: p.currToken.Value,
+		}
+
+		p.read()
+		_, err := p.getExpectedToken(token.Var)
+		if err != nil {
+			return nil, err
+		}
+
+		argVar, err := p.parseIdentifier()
+		if err != nil {
+			return nil, err
+		}
+
+		argument.Arg, _ = argVar.(*ast.Identifier)
+
+		arguments = append(arguments, argument)
+
+		if p.nextToken.Type != token.RParen {
+			p.read()
+			_, err := p.getExpectedToken(token.Comma)
+			if err != nil {
+				return nil, err
+			}
+		}
+		p.read()
+	}
+
+	return arguments, nil
+}
+
 func (p *Parser) parseFunctionCall(function ast.IExpression) (ast.IExpression, error) {
-	expression := &ast.FunctionCall{
+	functionCall := &ast.FunctionCall{
 		Token:    p.currToken,
 		Function: function,
 	}
 	p.read()
 
-	_, err := p.getExpectedToken(token.RParen)
+	var err error
+
+	functionCall.Arguments, err = p.parseFunctionCallArguments()
+
+	return functionCall, err
+}
+
+func (p *Parser) parseFunctionCallArguments() ([]ast.IExpression, error) {
+	var args []ast.IExpression
+
+	if p.currToken.Type == token.RParen {
+		return args, nil
+	}
+	expression, err := p.parseExpression(Lowest)
 	if err != nil {
 		return nil, err
 	}
+	args = append(args, expression)
 
-	return expression, nil
+	p.read()
+	for p.currToken.Type == token.Comma {
+		p.read()
+		expression, err = p.parseExpression(Lowest)
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, expression)
+		p.read()
+	}
+
+	return args, nil
 }
 
 func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {
