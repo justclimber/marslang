@@ -19,7 +19,7 @@ const (
 	LBrace = "{"
 	RBrace = "}"
 
-	Ident = "ident"
+	Var = "var"
 
 	Function = "fn"
 	Return   = "return"
@@ -48,5 +48,5 @@ func LookupIdent(ident string) TokenType {
 		return keywordToken
 	}
 
-	return Ident
+	return Var
 }

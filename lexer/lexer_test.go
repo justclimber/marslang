@@ -18,7 +18,7 @@ c = fn() int {
 		expectedType  token.TokenType
 		expectedValue string
 	}{
-		{token.Ident, "a"},
+		{token.Var, "a"},
 		{token.Assignment, "="},
 		{token.LParen, "("},
 		{token.NumInt, "5"},
@@ -26,11 +26,11 @@ c = fn() int {
 		{token.NumInt, "6"},
 		{token.RParen, ")"},
 		{token.EOL, ""},
-		{token.Ident, "b"},
+		{token.Var, "b"},
 		{token.Assignment, "="},
 		{token.NumInt, "3"},
 		{token.EOL, ""},
-		{token.Ident, "c"},
+		{token.Var, "c"},
 		{token.Assignment, "="},
 		{token.Function, "fn"},
 		{token.LParen, "("},
@@ -61,7 +61,7 @@ func TestReal(t *testing.T) {
 		expectedType  token.TokenType
 		expectedValue string
 	}{
-		{token.Ident, "a"},
+		{token.Var, "a"},
 		{token.Assignment, "="},
 		{token.NumFloat, "5.6"},
 		{token.EOF, ""},
@@ -83,7 +83,7 @@ func TestRealShort(t *testing.T) {
 		expectedType  token.TokenType
 		expectedValue string
 	}{
-		{token.Ident, "a"},
+		{token.Var, "a"},
 		{token.Assignment, "="},
 		{token.NumFloat, "5."},
 		{token.EOF, ""},

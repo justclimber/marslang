@@ -60,7 +60,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.unaryFunctions = make(map[token.TokenType]unaryFunction)
 	p.registerUnaryFunction(token.NumInt, p.parseInteger)
 	p.registerUnaryFunction(token.NumFloat, p.parseReal)
-	p.registerUnaryFunction(token.Ident, p.parseIdentifier)
+	p.registerUnaryFunction(token.Var, p.parseIdentifier)
 	p.registerUnaryFunction(token.LParen, p.parseGroupedExpression)
 	p.registerUnaryFunction(token.Function, p.parseFunction)
 
@@ -107,7 +107,7 @@ func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.
 
 func (p *Parser) parseStatement() (ast.IStatement, error) {
 	switch p.currToken.Type {
-	case token.Ident:
+	case token.Var:
 		if p.nextToken.Type == token.LParen {
 			function := &ast.Identifier{
 				Token: p.currToken,
@@ -131,7 +131,7 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 }
 
 func (p *Parser) parseAssignment() (*ast.Assignment, error) {
-	tok, err := p.getExpectedToken(token.Ident)
+	tok, err := p.getExpectedToken(token.Var)
 	if err != nil {
 		return &ast.Assignment{}, err
 	}
