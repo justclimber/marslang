@@ -108,8 +108,18 @@ func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.
 func (p *Parser) parseStatement() (ast.IStatement, error) {
 	switch p.currToken.Type {
 	case token.Ident:
-		astNode, err := p.parseAssignment()
-		return astNode, err
+		if p.nextToken.Type == token.LParen {
+			function := &ast.Identifier{
+				Token: p.currToken,
+				Value: p.currToken.Value,
+			}
+			p.read()
+			astNode, err := p.parseFunctionCall(function)
+			return astNode, err
+		} else {
+			astNode, err := p.parseAssignment()
+			return astNode, err
+		}
 	case token.Return:
 		astNode, err := p.parseReturn()
 		return astNode, err

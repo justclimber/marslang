@@ -1,4 +1,4 @@
-c = fn() int {
-   return 3
+c = fn() void {
+   a = 3
 }
-a = c()
+c()
