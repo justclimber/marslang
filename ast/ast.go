@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"aakimov/marslang/iterpereter"
 	"aakimov/marslang/object"
 	"aakimov/marslang/token"
 	"errors"
@@ -100,9 +101,9 @@ func (node *Identifier) Exec(env *object.Environment) (object.Object, error) {
 		return val, nil
 	}
 
-	//if builtin, ok := builtins[node.Value]; ok {
-	//	return builtin
-	//}
+	if builtin, ok := iterpereter.Builtins[node.Value]; ok {
+		return builtin, nil
+	}
 
 	return nil, errors.New("identifier not found: " + node.Value)
 }
@@ -169,18 +170,19 @@ func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	switch fn := functionObj.(type) {
 
+	args, err := execExpressionList(node.Arguments, env)
+	if err != nil {
+		return nil, err
+	}
+
+	switch fn := functionObj.(type) {
 	case *object.Function:
 		statementsBlock, ok := fn.Statements.(StatementsBlock)
 		if !ok {
 			return nil, errors.New(fmt.Sprintf("Unexpected type for function body: %T", fn.Statements))
 		}
 
-		args, err := execExpressionList(node.Arguments, env)
-		if err != nil {
-			return nil, err
-		}
 		err = functionCallArgumentsCheck(fn, args)
 		if err != nil {
 			return nil, err
@@ -208,8 +210,8 @@ func (node *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
 		}
 		return result, nil
 
-	//case *object.Builtin:
-	//	return fn.Fn(args...)
+	case *object.Builtin:
+		return fn.Fn(args...), nil
 
 	default:
 		return nil, errors.New(fmt.Sprintf("not a function: %s", fn.Type()))

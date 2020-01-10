@@ -13,6 +13,7 @@ const (
 	NullObj        = "null"
 	ReturnValueObj = "return_value"
 	FunctionObj    = "function_obj"
+	BuiltinFnObj   = "builtin_fn_obj"
 )
 
 type Object interface {
@@ -67,3 +68,12 @@ func (f *Function) Type() ObjectType { return FunctionObj }
 func (f *Function) Inspect() string {
 	return "function"
 }
+
+type BuiltinFunction func(args ...Object) Object
+
+type Builtin struct {
+	Fn BuiltinFunction
+}
+
+func (b *Builtin) Type() ObjectType { return BuiltinFnObj }
+func (b *Builtin) Inspect() string  { return "builtin function" }

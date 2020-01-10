@@ -19,9 +19,11 @@ func main() {
 		log.Fatalf("Parsing error: %s\n", err.Error())
 	}
 	env := object.NewEnvironment()
+	fmt.Println("Program output:")
 	_, err = astProgram.Exec(env)
 	if err != nil {
 		log.Fatalf("Runtime error: %s\n", err.Error())
 	}
+	fmt.Println("")
 	env.Print()
 }
