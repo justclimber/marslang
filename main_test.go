@@ -29,7 +29,7 @@ func TestParenthesis(t *testing.T) {
 	require.Equal(t, int64(9), varAInt.Value)
 }
 
-func TestFunctionCall(t *testing.T) {
+func TestFunctionCallWith2Args(t *testing.T) {
 	input := `a = fn(int x, int y) int {
    return x + y
 }
@@ -51,4 +51,28 @@ c = a(2, 5)
 
 	varAInt, ok := varC.(*object.Integer)
 	require.Equal(t, int64(7), varAInt.Value)
+}
+
+func TestFunctionCallWith1Args(t *testing.T) {
+	input := `a = fn(int x) int {
+   return x * 10
+}
+c = a(2)
+`
+	l := lexer.New(input)
+	p := parser.New(l)
+	env := object.NewEnvironment()
+
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	_, err = astProgram.Exec(env)
+	require.Nil(t, err)
+	varC, ok := env.Get("c")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varC)
+
+	varAInt, ok := varC.(*object.Integer)
+	require.Equal(t, int64(20), varAInt.Value)
 }
