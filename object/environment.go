@@ -1,6 +1,9 @@
 package object
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 func NewEnclosedEnvironment(outer *Environment) *Environment {
 	env := NewEnvironment()
@@ -38,4 +41,12 @@ func (e *Environment) Print() {
 	for k, v := range e.store {
 		fmt.Printf("%s: %s\n", k, v.Inspect())
 	}
+}
+
+func (e *Environment) GetVarsAsJson() ([]byte, error) {
+	varMap := make(map[string]string)
+	for k, v := range e.store {
+		varMap[k] = v.Inspect()
+	}
+	return json.Marshal(varMap)
 }

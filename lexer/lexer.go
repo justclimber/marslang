@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"aakimov/marslang/token"
+	"fmt"
 	"log"
 	"unicode"
 )
@@ -77,7 +78,7 @@ func (l *Lexer) NextToken() token.Token {
 			currToken.Value = l.readIdentifier()
 			currToken.Type = token.LookupIdent(currToken.Value)
 		} else {
-			l.error("Unexpected symbol: " + string(l.currChar))
+			l.error(fmt.Sprintf("Unexpected symbol: '%c'", l.currChar))
 		}
 	}
 	l.read()
