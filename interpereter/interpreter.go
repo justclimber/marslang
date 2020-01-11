@@ -62,8 +62,8 @@ func ExecAssignment(node *ast.Assignment, env *object.Environment) (object.Objec
 	}
 	varName := node.Name.Value
 	if oldVar, isVarExist := env.Get(varName); isVarExist && oldVar.Type() != value.Type() {
-		return nil, errors.New(fmt.Sprintf("type mismatch on assinment: var type is %s and value type is %s",
-			oldVar.Type(), value.Type()))
+		return nil, runtimeError(node.Value, "type mismatch on assinment: var type is %s and value type is %s",
+			oldVar.Type(), value.Type())
 	}
 
 	env.Set(varName, value)
@@ -88,10 +88,10 @@ func ExecUnaryExpression(node *ast.UnaryExpression, env *object.Environment) (ob
 			value := right.(*object.Float).Value
 			return &object.Float{Value: -value}, nil
 		default:
-			return nil, errors.New(fmt.Sprintf("unknown operator: -%s", right.Type()))
+			return nil, runtimeError(node, "unknown operator: -%s", right.Type())
 		}
 	default:
-		return nil, errors.New(fmt.Sprintf("unknown operator: %s%s", node.Operator, right.Type()))
+		return nil, runtimeError(node, "unknown operator: %s%s", node.Operator, right.Type())
 	}
 }
 
@@ -106,7 +106,8 @@ func ExecBinExpression(node *ast.BinExpression, env *object.Environment) (object
 	}
 
 	if left.Type() != right.Type() {
-		return nil, errors.New(fmt.Sprintf("forbiddem operation on different types: %s and %s", left.Type(), right.Type()))
+		return nil, runtimeError(node, "forbidden operation on different types: %s and %s",
+			left.Type(), right.Type())
 	}
 
 	result, err := computeScalarArithmetic(left, right, node.Operator)
@@ -122,7 +123,7 @@ func ExecIdentifier(node *ast.Identifier, env *object.Environment) (object.Objec
 		return builtin, nil
 	}
 
-	return nil, errors.New("identifier not found: " + node.Value)
+	return nil, runtimeError(node, "identifier not found: "+node.Value)
 }
 
 func ExecReturn(node *ast.Return, env *object.Environment) (object.Object, error) {
@@ -161,7 +162,7 @@ func ExecFunctionCall(node *ast.FunctionCall, env *object.Environment) (object.O
 
 	switch fn := functionObj.(type) {
 	case *object.Function:
-		err = functionCallArgumentsCheck(fn.Arguments, args)
+		err = functionCallArgumentsCheck(node, fn.Arguments, args)
 		if err != nil {
 			return nil, err
 		}
@@ -172,27 +173,18 @@ func ExecFunctionCall(node *ast.FunctionCall, env *object.Environment) (object.O
 			return nil, err
 		}
 
-		// return type check
-		if result == nil && fn.ReturnType != "void" {
-			return nil, errors.New(fmt.Sprintf(
-				"Return type mismatch: function declared to return '%s' but in fact has no return",
-				fn.ReturnType))
-		} else if result != nil && fn.ReturnType == "void" {
-			return nil, errors.New(fmt.Sprintf(
-				"Return type mismatch: function declared as void but in fact return '%s'",
-				result.Type()))
-		} else if result != nil && fn.ReturnType != "void" && result.Type() != object.ObjectType(fn.ReturnType) {
-			return nil, errors.New(fmt.Sprintf(
-				"Return type mismatch: function declared to return '%s' but in fact return '%s'",
-				fn.ReturnType, result.Type()))
+		err = functionReturnTypeCheck(node, result, fn.ReturnType)
+		if err != nil {
+			return nil, err
 		}
+
 		return result, nil
 
 	case *object.Builtin:
 		return fn.Fn(args...), nil
 
 	default:
-		return nil, errors.New(fmt.Sprintf("not a function: %s", fn.Type()))
+		return nil, runtimeError(node, "not a function: %s", fn.Type())
 	}
 }
 
@@ -210,15 +202,35 @@ func execExpressionList(expressions []ast.IExpression, env *object.Environment) 
 	return result, nil
 }
 
-func functionCallArgumentsCheck(declaredArgs []*ast.FunctionArg, actualArgValues []object.Object) error {
-	if len(declaredArgs) != len(actualArgValues) {
-		return errors.New(fmt.Sprintf("Function call arguments count micmatch: dectlared %d, but called %d",
-			len(declaredArgs), len(actualArgValues)))
+func functionReturnTypeCheck(node *ast.FunctionCall, result object.Object, functionReturnType string) error {
+	if result == nil && functionReturnType != "void" {
+		return runtimeError(node,
+			"Return type mismatch: function declared to return '%s' but in fact has no return",
+			functionReturnType)
+	} else if result != nil && functionReturnType == "void" {
+		return runtimeError(node,
+			"Return type mismatch: function declared as void but in fact return '%s'",
+			result.Type())
+	} else if result != nil && functionReturnType != "void" && result.Type() != object.ObjectType(functionReturnType) {
+		return runtimeError(node,
+			"Return type mismatch: function declared to return '%s' but in fact return '%s'",
+			functionReturnType, result.Type())
 	}
-	for i, arg := range declaredArgs {
-		if actualArgValues[i].Type() != object.ObjectType(arg.ArgType) {
-			return errors.New(fmt.Sprintf("argument #%d type mismatch: expected '%s' by func declaration but called '%s'",
-				i+1, arg.ArgType, actualArgValues[i].Type()))
+	return nil
+}
+
+func functionCallArgumentsCheck(node *ast.FunctionCall, declaredArgs []*ast.FunctionArg, actualArgValues []object.Object) error {
+	if len(declaredArgs) != len(actualArgValues) {
+		return runtimeError(node, "Function call arguments count micmatch: dectlared %d, but called %d",
+			len(declaredArgs), len(actualArgValues))
+	}
+
+	if len(actualArgValues) > 0 {
+		for i, arg := range declaredArgs {
+			if actualArgValues[i].Type() != object.ObjectType(arg.ArgType) {
+				return runtimeError(arg, "argument #%d type mismatch: expected '%s' by func declaration but called '%s'",
+					i+1, arg.ArgType, actualArgValues[i].Type())
+			}
 		}
 	}
 
@@ -233,4 +245,10 @@ func transferArgsToNewEnv(fn *object.Function, args []object.Object) *object.Env
 	}
 
 	return env
+}
+
+func runtimeError(node ast.Node, format string, args ...interface{}) error {
+	msg := fmt.Sprintf(format, args...)
+	t := node.GetToken()
+	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, t.Line, t.Pos))
 }

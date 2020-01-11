@@ -10,9 +10,10 @@ import (
 type Lexer struct {
 	input        []rune
 	currPosition int
-	nextPosition int
 	currChar     rune
 	nextChar     rune
+	line         int
+	pos          int
 }
 
 func New(input string) *Lexer {
@@ -20,6 +21,8 @@ func New(input string) *Lexer {
 
 	l.currChar = l.input[l.currPosition]
 	l.nextChar = l.input[l.currPosition+1]
+	l.line = 1
+	l.pos = 1
 	return l
 }
 
@@ -31,11 +34,21 @@ func (l *Lexer) read() {
 	} else {
 		l.nextChar = l.input[l.currPosition+1]
 	}
+
+	if l.currPosition+1 < len(l.input) && l.input[l.currPosition-1] == '\n' {
+		l.line += 1
+		l.pos = 1
+	} else {
+		l.pos += 1
+	}
 }
 
 func (l *Lexer) NextToken() (token.Token, error) {
 	var currToken token.Token
 	l.skipWhitespace()
+
+	currToken.Line = l.line
+	currToken.Pos = l.pos
 
 	simpleTokens := []string{
 		token.Assignment,
@@ -78,29 +91,20 @@ func (l *Lexer) NextToken() (token.Token, error) {
 			currToken.Value = l.readIdentifier()
 			currToken.Type = token.LookupIdent(currToken.Value)
 		} else {
-			return currToken, l.error(fmt.Sprintf("Unexpected symbol: '%c'", l.currChar))
+			return currToken, l.error("Unexpected symbol: '%c'", l.currChar)
 		}
 	}
 	l.read()
 	return currToken, nil
 }
 
-func (l *Lexer) error(errorMsg string) error {
-	line, pos := l.GetCurrLineAndPos()
-	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", errorMsg, line, pos))
+func (l *Lexer) error(format string, args ...interface{}) error {
+	errorMsg := fmt.Sprintf(format, args...)
+	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", errorMsg, l.line, l.pos))
 }
 
 func (l *Lexer) GetCurrLineAndPos() (int, int) {
-	line := 0
-	pos := 0
-	for i := 0; i < l.currPosition && i < len(l.input); i++ {
-		pos++
-		if l.input[i] == rune('\n') {
-			line++
-			pos = 0
-		}
-	}
-	return line + 1, pos + 1
+	return l.line, l.pos
 }
 
 func (l *Lexer) skipWhitespace() {

@@ -112,19 +112,39 @@ func TestGetCurrLineAndPos(t *testing.T) {
 	input := `a = 5 + 6
 asd`
 	l := New(input)
-	line, pos := l.GetCurrLineAndPos()
-	assert.Equal(t, 1, line, "Line should be 1 on start")
-	assert.Equal(t, 1, pos, "Pos should be 1 on start")
+	assert.Equal(t, 1, l.line, "Line should be 1 on start")
+	assert.Equal(t, 1, l.pos, "Pos should be 1 on start")
 
 	l.read()
-	line, pos = l.GetCurrLineAndPos()
-	assert.Equal(t, 1, line, "Line should be 1")
-	assert.Equal(t, 2, pos, "Pos should be 2")
+	assert.Equal(t, 1, l.line, "Line should be 1")
+	assert.Equal(t, 2, l.pos, "Pos should be 2")
 
 	for i := 0; i <= 8; i++ {
 		l.read()
 	}
-	line, pos = l.GetCurrLineAndPos()
-	assert.Equal(t, 2, line, "Line should be 2")
-	assert.Equal(t, 1, pos, "Pos should be 1")
+	assert.Equal(t, 2, l.line, "Line should be 2")
+	assert.Equal(t, 1, l.pos, "Pos should be 1")
+}
+
+func TestLineAndPosForTokens(t *testing.T) {
+	input := `a = fn() {
+   b = 3
+}`
+	l := New(input)
+	_, _ = l.NextToken()
+	_, _ = l.NextToken()
+	tok, _ := l.NextToken()
+	assert.Equal(t, 1, tok.Line)
+	assert.Equal(t, 5, tok.Pos)
+
+	_, _ = l.NextToken()
+	_, _ = l.NextToken()
+	_, _ = l.NextToken()
+	tok, _ = l.NextToken()
+	assert.Equal(t, 1, tok.Line)
+	assert.Equal(t, 11, tok.Pos)
+
+	tok, _ = l.NextToken()
+	assert.Equal(t, 2, tok.Line)
+	assert.Equal(t, 4, tok.Pos)
 }

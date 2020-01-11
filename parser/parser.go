@@ -146,7 +146,7 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 	case token.EOL:
 		return nil, nil
 	default:
-		return nil, p.parseError(fmt.Sprintf("Unexpected token for start of statement: %s\n", p.currToken.Type))
+		return nil, p.parseError("Unexpected token for start of statement: %s\n", p.currToken.Type)
 	}
 }
 
@@ -210,7 +210,7 @@ func (p *Parser) parseReturn() (*ast.Return, error) {
 func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
 	unaryFunction := p.unaryExprFunctions[p.currToken.Type]
 	if unaryFunction == nil {
-		err := p.parseError(fmt.Sprintf("no Unary parse function for %s found", p.currToken.Type))
+		err := p.parseError("no Unary parse function for %s found", p.currToken.Type)
 		return nil, err
 	}
 
@@ -223,7 +223,7 @@ func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
 	for !(p.nextToken.Type == token.EOL) && !(p.nextToken.Type == token.RParen) && precedence < nextPrecedence {
 		binExprFunction := p.binExprFunctions[p.nextToken.Type]
 		if binExprFunction == nil {
-			err := p.parseError(fmt.Sprintf("Unexpected token '%s'", p.nextToken.Type))
+			err := p.parseError("Unexpected token '%s'", p.nextToken.Type)
 			return nil, err
 		}
 
@@ -251,7 +251,7 @@ func (p *Parser) parseInteger() (ast.IExpression, error) {
 
 	value, err := strconv.ParseInt(p.currToken.Value, 0, 64)
 	if err != nil {
-		err := p.parseError(fmt.Sprintf("could not parse %q as integer", p.currToken.Value))
+		err := p.parseError("could not parse %q as integer", p.currToken.Value)
 		return nil, err
 	}
 
@@ -282,7 +282,7 @@ func (p *Parser) parseReal() (ast.IExpression, error) {
 
 	value, err := strconv.ParseFloat(p.currToken.Value, 64)
 	if err != nil {
-		err := p.parseError(fmt.Sprintf("could not parse %q as float", p.currToken.Value))
+		err := p.parseError("could not parse %q as float", p.currToken.Value)
 		return nil, err
 	}
 
@@ -511,8 +511,8 @@ func (p *Parser) curPrecedence() int {
 
 func (p *Parser) getExpectedToken(tokenType token.TokenType) (token.Token, error) {
 	if p.currToken.Type != tokenType {
-		err := p.parseError(fmt.Sprintf("expected next token to be '%s', got '%s' instead",
-			tokenType, p.currToken.Type))
+		err := p.parseError("expected next token to be '%s', got '%s' instead",
+			tokenType, p.currToken.Type)
 		return token.Token{}, err
 	}
 	return p.currToken, nil
@@ -526,7 +526,7 @@ func (p *Parser) registerBinExprFunction(tokenType token.TokenType, fn binExprFu
 	p.binExprFunctions[tokenType] = fn
 }
 
-func (p *Parser) parseError(msg string) error {
-	line, pos := p.l.GetCurrLineAndPos()
-	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, line, pos))
+func (p *Parser) parseError(format string, args ...interface{}) error {
+	msg := fmt.Sprintf(format, args...)
+	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, p.currToken.Line, p.currToken.Pos))
 }
