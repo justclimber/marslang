@@ -58,6 +58,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken = p.l.NextToken()
 
 	p.unaryFunctions = make(map[token.TokenType]unaryFunction)
+	p.registerUnaryFunction(token.Minus, p.parseUnaryExpression)
 	p.registerUnaryFunction(token.NumInt, p.parseInteger)
 	p.registerUnaryFunction(token.NumFloat, p.parseReal)
 	p.registerUnaryFunction(token.Var, p.parseIdentifier)
@@ -223,6 +224,21 @@ func (p *Parser) parseInteger() (ast.IExpression, error) {
 
 	node.Value = value
 	return node, nil
+}
+
+func (p *Parser) parseUnaryExpression() (ast.IExpression, error) {
+	node := &ast.UnaryExpression{
+		Token:    p.currToken,
+		Operator: p.currToken.Value,
+	}
+	p.read()
+	expressionResult, err := p.parseExpression(Prefix)
+	if err != nil {
+		return nil, err
+	}
+	node.Right = expressionResult
+
+	return node, err
 }
 
 func (p *Parser) parseReal() (ast.IExpression, error) {

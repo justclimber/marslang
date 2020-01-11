@@ -66,6 +66,37 @@ type Expression struct {
 	Expression IExpression
 }
 
+type UnaryExpression struct {
+	Token    token.Token
+	Right    IExpression
+	Operator string
+}
+
+func (node *UnaryExpression) Exec(env *object.Environment) (object.Object, error) {
+	right, err := node.Right.Exec(env)
+	if err != nil {
+		return nil, err
+	}
+	switch node.Operator {
+	case "!":
+		// TBD
+		return nil, nil
+	case token.Minus:
+		switch right.Type() {
+		case object.IntegerObj:
+			value := right.(*object.Integer).Value
+			return &object.Integer{Value: -value}, nil
+		case object.FloatObj:
+			value := right.(*object.Float).Value
+			return &object.Float{Value: -value}, nil
+		default:
+			return nil, errors.New(fmt.Sprintf("unknown operator: -%s", right.Type()))
+		}
+	default:
+		return nil, errors.New(fmt.Sprintf("unknown operator: %s%s", node.Operator, right.Type()))
+	}
+}
+
 type BinOperation struct {
 	Token    token.Token
 	Left     IExpression

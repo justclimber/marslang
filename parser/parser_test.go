@@ -26,6 +26,28 @@ b = 3
 		assert.Equal(t, assignStmt.Name.Value, vars[i], "%d statement", i)
 	}
 }
+
+func TestParseUnary(t *testing.T) {
+	input := `a = -5
+b = -a
+`
+	l := lexer.New(input)
+	p := New(l)
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	require.Len(t, astProgram.Statements, 2)
+	vars := []string{"a", "b"}
+	for i, stmt := range astProgram.Statements {
+		assert.IsType(t, &ast.Assignment{}, stmt, "%d statement", i)
+
+		assignStmt, _ := stmt.(*ast.Assignment)
+		assert.Equal(t, assignStmt.Name.Value, vars[i], "%d statement", i)
+
+		assert.IsType(t, &ast.UnaryExpression{}, assignStmt.Value, "%d statement", i)
+	}
+}
+
 func TestParseReal(t *testing.T) {
 	input := `a = 5.6
 `
