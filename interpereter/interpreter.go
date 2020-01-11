@@ -41,6 +41,8 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		result, err = ExecFunction(node, env)
 	case *ast.FunctionCall:
 		result, err = ExecFunctionCall(node, env)
+	case *ast.IfStatement:
+		result, err = ExecIfStatement(node, env)
 	}
 	if err != nil {
 		return nil, err
@@ -212,6 +214,24 @@ func execExpressionList(expressions []ast.IExpression, env *object.Environment) 
 	}
 
 	return result, nil
+}
+
+func ExecIfStatement(node *ast.IfStatement, env *object.Environment) (object.Object, error) {
+	condition, err := Exec(node.Condition, env)
+	if err != nil {
+		return nil, err
+	}
+	if condition.Type() != object.BooleanObj {
+		return nil, runtimeError(node, "Condition should be boolean type but %s in fact", condition.Type())
+	}
+
+	if condition == ReservedObjTrue {
+		return Exec(node.PositiveBranch, env)
+	} else if node.ElseBranch != nil {
+		return Exec(node.ElseBranch, env)
+	} else {
+		return nil, nil
+	}
 }
 
 func functionReturnTypeCheck(node *ast.FunctionCall, result object.Object, functionReturnType string) error {

@@ -115,3 +115,55 @@ b = -a
 	varBInt, ok := varB.(*object.Integer)
 	require.Equal(t, int64(5), varBInt.Value)
 }
+
+func TestExecIfStatement(t *testing.T) {
+	input := `if 4 == 3 {
+    a = 10
+}
+`
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+
+	env := object.NewEnvironment()
+
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	_, err = Exec(astProgram, env)
+	require.Nil(t, err)
+
+	_, ok := env.Get("a")
+	require.False(t, ok)
+}
+
+func TestExecIfStatementWithElseBranch(t *testing.T) {
+	input := `if 4 > 3 {
+    a = 10
+} else {
+    b = 20
+}
+`
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+
+	env := object.NewEnvironment()
+
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	_, err = Exec(astProgram, env)
+	require.Nil(t, err)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varA)
+
+	varAInt, ok := varA.(*object.Integer)
+	require.Equal(t, int64(10), varAInt.Value)
+
+	_, ok = env.Get("b")
+	require.False(t, ok)
+}

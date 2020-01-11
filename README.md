@@ -13,10 +13,15 @@ sum = fn(int x, int y) int {
    return x + y
 }
 a = sum(2, 5)
+c = 10
+if c > 8 {
+    print(true)
+} else {
+    print(false)
+}
 ```
 
 # TODO
-* control flow - if
 * control flow - for
 * Тип string
 * Тип array

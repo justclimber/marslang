@@ -149,6 +149,9 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 	case token.Return:
 		astNode, err := p.parseReturn()
 		return astNode, err
+	case token.If:
+		astNode, err := p.parseIfStatement()
+		return astNode, err
 	case token.EOL:
 		return nil, nil
 	default:
@@ -226,10 +229,10 @@ func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
 	}
 
 	nextPrecedence := p.nextPrecedence()
-	for !(p.nextToken.Type == token.EOL) && !(p.nextToken.Type == token.RParen) && precedence < nextPrecedence {
+	for !p.nextTokenIn([]token.TokenType{token.EOL, token.RParen, token.LBrace}) && precedence < nextPrecedence {
 		binExprFunction := p.binExprFunctions[p.nextToken.Type]
 		if binExprFunction == nil {
-			err := p.parseError("Unexpected token '%s'", p.nextToken.Type)
+			err := p.parseError("Unexpected token for binary expression '%s'", p.nextToken.Type)
 			return nil, err
 		}
 
@@ -315,6 +318,45 @@ func (p *Parser) parseBinExpression(left ast.IExpression) (ast.IExpression, erro
 	}
 
 	return expression, nil
+}
+
+func (p *Parser) parseIfStatement() (ast.IExpression, error) {
+	stmt := &ast.IfStatement{Token: p.currToken}
+
+	var err error
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	stmt.Condition, err = p.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
+		return nil, err
+	}
+
+	statements, err := p.parseBlockOfStatements(token.RBrace)
+	stmt.PositiveBranch = &ast.StatementsBlock{Statements: statements}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	if p.currToken.Type != token.Else {
+		return stmt, nil
+	}
+
+	if err := p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
+		return nil, err
+	}
+
+	statements, err = p.parseBlockOfStatements(token.RBrace)
+	stmt.ElseBranch = &ast.StatementsBlock{Statements: statements}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseFunction() (ast.IExpression, error) {
@@ -529,6 +571,27 @@ func (p *Parser) getExpectedToken(tokenType token.TokenType) (token.Token, error
 		return token.Token{}, err
 	}
 	return p.currToken, nil
+}
+
+func (p *Parser) nextTokenIn(tokenTypes []token.TokenType) bool {
+	for _, tokenType := range tokenTypes {
+		if p.nextToken.Type == tokenType {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *Parser) requireTokenSequence(tokens []token.TokenType) error {
+	for _, tok := range tokens {
+		if err := p.read(); err != nil {
+			return err
+		}
+		if _, err := p.getExpectedToken(tok); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *Parser) registerUnaryExprFunction(tokenType token.TokenType, fn unaryExprFunction) {

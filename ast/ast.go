@@ -83,6 +83,13 @@ type FunctionCall struct {
 	Arguments []IExpression
 }
 
+type IfStatement struct {
+	Token          token.Token
+	Condition      IExpression
+	PositiveBranch *StatementsBlock
+	ElseBranch     *StatementsBlock
+}
+
 func (node *Assignment) GetToken() token.Token      { return node.Token }
 func (node *UnaryExpression) GetToken() token.Token { return node.Token }
 func (node *BinExpression) GetToken() token.Token   { return node.Token }
@@ -94,6 +101,7 @@ func (node *Return) GetToken() token.Token          { return node.Token }
 func (node *Function) GetToken() token.Token        { return node.Token }
 func (node *FunctionArg) GetToken() token.Token     { return node.Token }
 func (node *FunctionCall) GetToken() token.Token    { return node.Token }
+func (node *IfStatement) GetToken() token.Token     { return node.Token }
 func (node *StatementsBlock) GetToken() token.Token {
 	if len(node.Statements) > 0 {
 		return node.Statements[0].GetToken()

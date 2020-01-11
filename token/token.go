@@ -35,6 +35,8 @@ const (
 	Return   = "return"
 	True     = "true"
 	False    = "false"
+	If       = "if"
+	Else     = "else"
 
 	// type hints
 	Type = "type"
@@ -57,6 +59,8 @@ var keywords = map[string]TokenType{
 	"float":  Type,
 	"true":   True,
 	"false":  False,
+	"if":     If,
+	"else":   Else,
 }
 
 func LookupIdent(ident string) TokenType {

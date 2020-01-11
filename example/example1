@@ -2,4 +2,9 @@ sum = fn(int x, int y) int {
    return x + y
 }
 a = sum(2, 5)
-print(a)
+c = 10
+if c > 8 {
+    print(true)
+} else {
+    print(false)
+}

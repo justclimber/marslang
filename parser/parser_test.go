@@ -136,3 +136,42 @@ c = a(2, 5)
 	assignStmt2, _ := astProgram.Statements[1].(*ast.Assignment)
 	assert.IsType(t, &ast.FunctionCall{}, assignStmt2.Value)
 }
+
+func TestParseIfStatement(t *testing.T) {
+	input := `if 2 > 3 {
+a = 4
+}
+b = 2
+`
+	l := lexer.New(input)
+	p, err := New(l)
+	require.Nil(t, err)
+
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	require.Len(t, astProgram.Statements, 2)
+	assert.IsType(t, &ast.IfStatement{}, astProgram.Statements[0])
+
+	ifStatement, _ := astProgram.Statements[0].(*ast.IfStatement)
+	assert.NotNil(t, ifStatement.Condition)
+}
+
+func TestParseIfStatementWithElseBranch(t *testing.T) {
+	input := `if 2 > 3 {
+a = 4
+} else {
+c = 3
+}
+b = 2
+`
+	l := lexer.New(input)
+	p, err := New(l)
+	require.Nil(t, err)
+
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	require.Len(t, astProgram.Statements, 2)
+	assert.IsType(t, &ast.IfStatement{}, astProgram.Statements[0])
+}
