@@ -37,8 +37,8 @@ var precedences = map[token.TokenType]int{
 }
 
 type (
-	unaryFunction  func() (ast.IExpression, error)
-	binOpFunctions func(ast.IExpression) (ast.IExpression, error)
+	unaryExprFunction func() (ast.IExpression, error)
+	binExprFunctions  func(ast.IExpression) (ast.IExpression, error)
 )
 
 type Parser struct {
@@ -47,8 +47,8 @@ type Parser struct {
 	currToken token.Token
 	nextToken token.Token
 
-	unaryFunctions map[token.TokenType]unaryFunction
-	binOpFunctions map[token.TokenType]binOpFunctions
+	unaryExprFunctions map[token.TokenType]unaryExprFunction
+	binExprFunctions   map[token.TokenType]binExprFunctions
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -57,21 +57,21 @@ func New(l *lexer.Lexer) *Parser {
 	p.currToken = p.l.NextToken()
 	p.nextToken = p.l.NextToken()
 
-	p.unaryFunctions = make(map[token.TokenType]unaryFunction)
-	p.registerUnaryFunction(token.Minus, p.parseUnaryExpression)
-	p.registerUnaryFunction(token.NumInt, p.parseInteger)
-	p.registerUnaryFunction(token.NumFloat, p.parseReal)
-	p.registerUnaryFunction(token.Var, p.parseIdentifier)
-	p.registerUnaryFunction(token.LParen, p.parseGroupedExpression)
-	p.registerUnaryFunction(token.Function, p.parseFunction)
+	p.unaryExprFunctions = make(map[token.TokenType]unaryExprFunction)
+	p.registerUnaryExprFunction(token.Minus, p.parseUnaryExpression)
+	p.registerUnaryExprFunction(token.NumInt, p.parseInteger)
+	p.registerUnaryExprFunction(token.NumFloat, p.parseReal)
+	p.registerUnaryExprFunction(token.Var, p.parseIdentifier)
+	p.registerUnaryExprFunction(token.LParen, p.parseGroupedExpression)
+	p.registerUnaryExprFunction(token.Function, p.parseFunction)
 
-	p.binOpFunctions = make(map[token.TokenType]binOpFunctions)
-	p.registerBinOpFunction(token.Plus, p.parseBinOperation)
-	p.registerBinOpFunction(token.Minus, p.parseBinOperation)
-	p.registerBinOpFunction(token.Slash, p.parseBinOperation)
-	p.registerBinOpFunction(token.Asterisk, p.parseBinOperation)
-	p.registerBinOpFunction(token.Assignment, p.parseBinOperation)
-	p.registerBinOpFunction(token.LParen, p.parseFunctionCall)
+	p.binExprFunctions = make(map[token.TokenType]binExprFunctions)
+	p.registerBinExprFunction(token.Plus, p.parseBinExpression)
+	p.registerBinExprFunction(token.Minus, p.parseBinExpression)
+	p.registerBinExprFunction(token.Slash, p.parseBinExpression)
+	p.registerBinExprFunction(token.Asterisk, p.parseBinExpression)
+	p.registerBinExprFunction(token.Assignment, p.parseBinExpression)
+	p.registerBinExprFunction(token.LParen, p.parseFunctionCall)
 
 	return p
 }
@@ -178,7 +178,7 @@ func (p *Parser) parseReturn() (*ast.Return, error) {
 }
 
 func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
-	unaryFunction := p.unaryFunctions[p.currToken.Type]
+	unaryFunction := p.unaryExprFunctions[p.currToken.Type]
 	if unaryFunction == nil {
 		err := p.parseError(fmt.Sprintf("no Unary parse function for %s found", p.currToken.Type))
 		return nil, err
@@ -191,14 +191,14 @@ func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
 
 	nextPrecedence := p.nextPrecedence()
 	for !(p.nextToken.Type == token.EOL) && !(p.nextToken.Type == token.RParen) && precedence < nextPrecedence {
-		binOpFunction := p.binOpFunctions[p.nextToken.Type]
-		if binOpFunction == nil {
+		binExprFunction := p.binExprFunctions[p.nextToken.Type]
+		if binExprFunction == nil {
 			err := p.parseError(fmt.Sprintf("Unexpected token '%s'", p.nextToken.Type))
 			return nil, err
 		}
 
 		p.read()
-		leftExp, err = binOpFunction(leftExp)
+		leftExp, err = binExprFunction(leftExp)
 		if err != nil {
 			return nil, err
 		}
@@ -254,8 +254,8 @@ func (p *Parser) parseReal() (ast.IExpression, error) {
 	return node, nil
 }
 
-func (p *Parser) parseBinOperation(left ast.IExpression) (ast.IExpression, error) {
-	expression := &ast.BinOperation{
+func (p *Parser) parseBinExpression(left ast.IExpression) (ast.IExpression, error) {
+	expression := &ast.BinExpression{
 		Token:    p.currToken,
 		Operator: p.currToken.Value,
 		Left:     left,
@@ -437,12 +437,12 @@ func (p *Parser) getExpectedToken(tokenType token.TokenType) (token.Token, error
 	return p.currToken, nil
 }
 
-func (p *Parser) registerUnaryFunction(tokenType token.TokenType, fn unaryFunction) {
-	p.unaryFunctions[tokenType] = fn
+func (p *Parser) registerUnaryExprFunction(tokenType token.TokenType, fn unaryExprFunction) {
+	p.unaryExprFunctions[tokenType] = fn
 }
 
-func (p *Parser) registerBinOpFunction(tokenType token.TokenType, fn binOpFunctions) {
-	p.binOpFunctions[tokenType] = fn
+func (p *Parser) registerBinExprFunction(tokenType token.TokenType, fn binExprFunctions) {
+	p.binExprFunctions[tokenType] = fn
 }
 
 func (p *Parser) parseError(msg string) error {

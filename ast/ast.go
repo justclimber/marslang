@@ -97,14 +97,14 @@ func (node *UnaryExpression) Exec(env *object.Environment) (object.Object, error
 	}
 }
 
-type BinOperation struct {
+type BinExpression struct {
 	Token    token.Token
 	Left     IExpression
 	Right    IExpression
 	Operator string
 }
 
-func (node *BinOperation) Exec(env *object.Environment) (object.Object, error) {
+func (node *BinExpression) Exec(env *object.Environment) (object.Object, error) {
 	left, err := node.Left.Exec(env)
 	if err != nil {
 		return nil, err

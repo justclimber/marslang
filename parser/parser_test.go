@@ -116,11 +116,11 @@ c = a(2, 5)
 	assert.Equal(t, "y", function.Arguments[1].Arg.Value)
 
 	returnStmt, _ := function.StatementsBlock.Statements[0].(*ast.Return)
-	assert.IsType(t, &ast.BinOperation{}, returnStmt.ReturnValue)
+	assert.IsType(t, &ast.BinExpression{}, returnStmt.ReturnValue)
 
-	binOperation, _ := returnStmt.ReturnValue.(*ast.BinOperation)
-	assert.IsType(t, &ast.Identifier{}, binOperation.Left)
-	assert.IsType(t, &ast.Identifier{}, binOperation.Right)
+	binExpression, _ := returnStmt.ReturnValue.(*ast.BinExpression)
+	assert.IsType(t, &ast.Identifier{}, binExpression.Left)
+	assert.IsType(t, &ast.Identifier{}, binExpression.Right)
 
 	assert.IsType(t, &ast.Assignment{}, astProgram.Statements[1])
 	assignStmt2, _ := astProgram.Statements[1].(*ast.Assignment)
