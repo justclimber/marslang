@@ -1,4 +1,4 @@
-package iterpereter
+package interpereter
 
 import (
 	"aakimov/go-monkey/token"

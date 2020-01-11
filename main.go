@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aakimov/marslang/iterpereter"
+	"aakimov/marslang/interpereter"
 	"aakimov/marslang/lexer"
 	"aakimov/marslang/object"
 	"aakimov/marslang/parser"
@@ -25,7 +25,7 @@ func main() {
 	}
 	env := object.NewEnvironment()
 	fmt.Println("Program output:")
-	_, err = iterpereter.Exec(astProgram, env)
+	_, err = interpereter.Exec(astProgram, env)
 	if err != nil {
 		log.Fatalf("Runtime error: %s\n", err.Error())
 	}

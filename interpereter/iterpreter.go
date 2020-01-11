@@ -1,4 +1,4 @@
-package iterpereter
+package interpereter
 
 import (
 	"aakimov/marslang/ast"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aakimov/marslang/iterpereter"
+	"aakimov/marslang/interpereter"
 	"aakimov/marslang/lexer"
 	"aakimov/marslang/object"
 	"aakimov/marslang/parser"
@@ -21,7 +21,7 @@ func TestParenthesis(t *testing.T) {
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
-	_, err = iterpereter.Exec(astProgram, env)
+	_, err = interpereter.Exec(astProgram, env)
 	require.Nil(t, err)
 	varA, ok := env.Get("a")
 
@@ -47,7 +47,7 @@ c = a(2, 5)
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
-	_, err = iterpereter.Exec(astProgram, env)
+	_, err = interpereter.Exec(astProgram, env)
 	require.Nil(t, err)
 	varC, ok := env.Get("c")
 
@@ -73,7 +73,7 @@ c = a(2)
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
-	_, err = iterpereter.Exec(astProgram, env)
+	_, err = interpereter.Exec(astProgram, env)
 	require.Nil(t, err)
 	varC, ok := env.Get("c")
 
@@ -97,7 +97,7 @@ b = -a
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
-	_, err = iterpereter.Exec(astProgram, env)
+	_, err = interpereter.Exec(astProgram, env)
 	require.Nil(t, err)
 
 	varA, ok := env.Get("a")
