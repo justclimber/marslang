@@ -18,7 +18,6 @@ a = sum(2, 5)
 # TODO
 * type check on function call
 * Улучшить сообщения об ошибке - при выполнении - стэктрейс + номер строки/позиця
-* Вынести код исполнения из пакета AST?
 * control flow - if
 * control flow - for
 * Тип bool
