@@ -51,11 +51,19 @@ type Parser struct {
 	binExprFunctions   map[token.TokenType]binExprFunctions
 }
 
-func New(l *lexer.Lexer) *Parser {
+func New(l *lexer.Lexer) (*Parser, error) {
 	p := &Parser{l: l}
 
-	p.currToken = p.l.NextToken()
-	p.nextToken = p.l.NextToken()
+	var err error
+	p.currToken, err = p.l.NextToken()
+	if err != nil {
+		return nil, err
+	}
+
+	p.nextToken, err = p.l.NextToken()
+	if err != nil {
+		return nil, err
+	}
 
 	p.unaryExprFunctions = make(map[token.TokenType]unaryExprFunction)
 	p.registerUnaryExprFunction(token.Minus, p.parseUnaryExpression)
@@ -73,12 +81,17 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerBinExprFunction(token.Assignment, p.parseBinExpression)
 	p.registerBinExprFunction(token.LParen, p.parseFunctionCall)
 
-	return p
+	return p, nil
 }
 
-func (p *Parser) read() {
+func (p *Parser) read() error {
+	var err error
 	p.currToken = p.nextToken
-	p.nextToken = p.l.NextToken()
+	p.nextToken, err = p.l.NextToken()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p *Parser) Parse() (*ast.StatementsBlock, error) {
@@ -101,7 +114,10 @@ func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.
 		if stmt != nil {
 			statements = append(statements, stmt)
 		}
-		p.read()
+		err = p.read()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return statements, nil
 }
@@ -114,7 +130,10 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 				Token: p.currToken,
 				Value: p.currToken.Value,
 			}
-			p.read()
+			err := p.read()
+			if err != nil {
+				return nil, err
+			}
 			astNode, err := p.parseFunctionCall(function)
 			return astNode, err
 		} else {
@@ -144,17 +163,26 @@ func (p *Parser) parseAssignment() (*ast.Assignment, error) {
 		Token: p.currToken,
 		Name:  identStmt,
 	}
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	_, err = p.getExpectedToken(token.Assignment)
 	if err != nil {
 		return &ast.Assignment{}, err
 	}
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	assignStmt.Value, err = p.parseExpression(Lowest)
 	if err != nil {
 		return &ast.Assignment{}, err
 	}
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	_, err = p.getExpectedToken(token.EOL)
 	if err != nil {
 		return &ast.Assignment{}, err
@@ -165,9 +193,11 @@ func (p *Parser) parseAssignment() (*ast.Assignment, error) {
 
 func (p *Parser) parseReturn() (*ast.Return, error) {
 	stmt := &ast.Return{Token: p.currToken}
-	p.read()
+	err := p.read()
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
 	stmt.ReturnValue, err = p.parseExpression(Lowest)
 
 	if err != nil {
@@ -197,7 +227,10 @@ func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
 			return nil, err
 		}
 
-		p.read()
+		err = p.read()
+		if err != nil {
+			return nil, err
+		}
 		leftExp, err = binExprFunction(leftExp)
 		if err != nil {
 			return nil, err
@@ -231,7 +264,10 @@ func (p *Parser) parseUnaryExpression() (ast.IExpression, error) {
 		Token:    p.currToken,
 		Operator: p.currToken.Value,
 	}
-	p.read()
+	err := p.read()
+	if err != nil {
+		return nil, err
+	}
 	expressionResult, err := p.parseExpression(Prefix)
 	if err != nil {
 		return nil, err
@@ -262,8 +298,11 @@ func (p *Parser) parseBinExpression(left ast.IExpression) (ast.IExpression, erro
 	}
 
 	precedence := p.curPrecedence()
-	p.read()
-	var err error
+	err := p.read()
+	if err != nil {
+		return nil, err
+	}
+
 	expression.Right, err = p.parseExpression(precedence)
 	if err != nil {
 		return nil, err
@@ -275,13 +314,19 @@ func (p *Parser) parseBinExpression(left ast.IExpression) (ast.IExpression, erro
 func (p *Parser) parseFunction() (ast.IExpression, error) {
 	function := &ast.Function{Token: p.currToken}
 
-	p.read()
-	_, err := p.getExpectedToken(token.LParen)
+	err := p.read()
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.getExpectedToken(token.LParen)
 	if err != nil {
 		return nil, err
 	}
 
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	function.Arguments, err = p.parseFunctionArgs()
 	if err != nil {
 		return nil, err
@@ -292,26 +337,38 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 		return nil, err
 	}
 
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	typeToken, err := p.getExpectedToken(token.Type)
 	if err != nil {
 		return nil, err
 	}
 	function.ReturnType = typeToken.Value
 
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	_, err = p.getExpectedToken(token.LBrace)
 	if err != nil {
 		return nil, err
 	}
 
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	_, err = p.getExpectedToken(token.EOL)
 	if err != nil {
 		return nil, err
 	}
 
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	statements, err := p.parseBlockOfStatements(token.RBrace)
 	statementsBlock := ast.StatementsBlock{Statements: statements}
 	function.StatementsBlock = statementsBlock
@@ -328,8 +385,11 @@ func (p *Parser) parseFunctionArgs() ([]*ast.FunctionArg, error) {
 			ArgType: p.currToken.Value,
 		}
 
-		p.read()
-		_, err := p.getExpectedToken(token.Var)
+		err := p.read()
+		if err != nil {
+			return nil, err
+		}
+		_, err = p.getExpectedToken(token.Var)
 		if err != nil {
 			return nil, err
 		}
@@ -344,13 +404,19 @@ func (p *Parser) parseFunctionArgs() ([]*ast.FunctionArg, error) {
 		arguments = append(arguments, argument)
 
 		if p.nextToken.Type != token.RParen {
-			p.read()
+			err = p.read()
+			if err != nil {
+				return nil, err
+			}
 			_, err := p.getExpectedToken(token.Comma)
 			if err != nil {
 				return nil, err
 			}
 		}
-		p.read()
+		err = p.read()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return arguments, nil
@@ -361,9 +427,10 @@ func (p *Parser) parseFunctionCall(function ast.IExpression) (ast.IExpression, e
 		Token:    p.currToken,
 		Function: function,
 	}
-	p.read()
-
-	var err error
+	err := p.read()
+	if err != nil {
+		return nil, err
+	}
 
 	functionCall.Arguments, err = p.parseFunctionCallArguments()
 
@@ -382,28 +449,43 @@ func (p *Parser) parseFunctionCallArguments() ([]ast.IExpression, error) {
 	}
 	args = append(args, expression)
 
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	for p.currToken.Type == token.Comma {
-		p.read()
+		err = p.read()
+		if err != nil {
+			return nil, err
+		}
 		expression, err = p.parseExpression(Lowest)
 		if err != nil {
 			return nil, err
 		}
 		args = append(args, expression)
-		p.read()
+		err = p.read()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return args, nil
 }
 
 func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {
-	p.read()
+	err := p.read()
+	if err != nil {
+		return nil, err
+	}
 
 	expression, err := p.parseExpression(Lowest)
 	if err != nil {
 		return nil, err
 	}
-	p.read()
+	err = p.read()
+	if err != nil {
+		return nil, err
+	}
 	_, err = p.getExpectedToken(token.RParen)
 	if err != nil {
 		return nil, err

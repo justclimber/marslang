@@ -55,7 +55,8 @@ c = fn(int a, int b) int {
 	l := New(input)
 
 	for i, tt := range tests {
-		tok := l.NextToken()
+		tok, err := l.NextToken()
+		assert.Nil(t, err, "[%d] token lexer error", i)
 		assert.Equal(t, tt.expectedType, tok.Type, "[%d] token type wrong", i)
 		assert.Equal(t, tt.expectedValue, tok.Value, "[%d] token value wrong", i)
 	}
@@ -77,7 +78,8 @@ func TestReal(t *testing.T) {
 	l := New(input)
 
 	for i, tt := range tests {
-		tok := l.NextToken()
+		tok, err := l.NextToken()
+		assert.Nil(t, err, "[%d] token lexer error", i)
 		assert.Equal(t, tt.expectedType, tok.Type, "[%d] token type wrong", i)
 		assert.Equal(t, tt.expectedValue, tok.Value, "[%d] token value wrong", i)
 	}
@@ -99,7 +101,8 @@ func TestRealShort(t *testing.T) {
 	l := New(input)
 
 	for i, tt := range tests {
-		tok := l.NextToken()
+		tok, err := l.NextToken()
+		assert.Nil(t, err, "[%d] token lexer error", i)
 		assert.Equal(t, tt.expectedType, tok.Type, "[%d] token type wrong", i)
 		assert.Equal(t, tt.expectedValue, tok.Value, "[%d] token value wrong", i)
 	}

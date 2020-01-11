@@ -2,8 +2,8 @@ package lexer
 
 import (
 	"aakimov/marslang/token"
+	"errors"
 	"fmt"
-	"log"
 	"unicode"
 )
 
@@ -33,7 +33,7 @@ func (l *Lexer) read() {
 	}
 }
 
-func (l *Lexer) NextToken() token.Token {
+func (l *Lexer) NextToken() (token.Token, error) {
 	var currToken token.Token
 	l.skipWhitespace()
 
@@ -54,7 +54,7 @@ func (l *Lexer) NextToken() token.Token {
 			currToken.Type = token.TokenType(simpleToken)
 			currToken.Value = string(l.currChar)
 			l.read()
-			return currToken
+			return currToken, nil
 		}
 	}
 
@@ -78,16 +78,16 @@ func (l *Lexer) NextToken() token.Token {
 			currToken.Value = l.readIdentifier()
 			currToken.Type = token.LookupIdent(currToken.Value)
 		} else {
-			l.error(fmt.Sprintf("Unexpected symbol: '%c'", l.currChar))
+			return currToken, l.error(fmt.Sprintf("Unexpected symbol: '%c'", l.currChar))
 		}
 	}
 	l.read()
-	return currToken
+	return currToken, nil
 }
 
-func (l *Lexer) error(errorMsg string) {
+func (l *Lexer) error(errorMsg string) error {
 	line, pos := l.GetCurrLineAndPos()
-	log.Fatalf("Lexer error: %s\nline:%d, pos %d", errorMsg, line, pos)
+	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", errorMsg, line, pos))
 }
 
 func (l *Lexer) GetCurrLineAndPos() (int, int) {

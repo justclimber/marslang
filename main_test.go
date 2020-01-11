@@ -12,7 +12,9 @@ func TestParenthesis(t *testing.T) {
 	input := `a = (1 + 2) * 3
 `
 	l := lexer.New(input)
-	p := parser.New(l)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+
 	env := object.NewEnvironment()
 
 	astProgram, err := p.Parse()
@@ -36,7 +38,9 @@ func TestFunctionCallWith2Args(t *testing.T) {
 c = a(2, 5)
 `
 	l := lexer.New(input)
-	p := parser.New(l)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+
 	env := object.NewEnvironment()
 
 	astProgram, err := p.Parse()
@@ -60,7 +64,9 @@ func TestFunctionCallWith1Args(t *testing.T) {
 c = a(2)
 `
 	l := lexer.New(input)
-	p := parser.New(l)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+
 	env := object.NewEnvironment()
 
 	astProgram, err := p.Parse()
@@ -82,7 +88,9 @@ func TestUnaryMinusOperator(t *testing.T) {
 b = -a
 `
 	l := lexer.New(input)
-	p := parser.New(l)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+
 	env := object.NewEnvironment()
 
 	astProgram, err := p.Parse()

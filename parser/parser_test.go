@@ -13,7 +13,9 @@ func TestParse(t *testing.T) {
 b = 3
 `
 	l := lexer.New(input)
-	p := New(l)
+	p, err := New(l)
+	require.Nil(t, err)
+
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
@@ -32,7 +34,9 @@ func TestParseUnary(t *testing.T) {
 b = -a
 `
 	l := lexer.New(input)
-	p := New(l)
+	p, err := New(l)
+	require.Nil(t, err)
+
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
@@ -52,7 +56,9 @@ func TestParseReal(t *testing.T) {
 	input := `a = 5.6
 `
 	l := lexer.New(input)
-	p := New(l)
+	p, err := New(l)
+	require.Nil(t, err)
+
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
@@ -69,7 +75,9 @@ func TestParseFunctionAndFunctionCall(t *testing.T) {
 c = a()
 `
 	l := lexer.New(input)
-	p := New(l)
+	p, err := New(l)
+	require.Nil(t, err)
+
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
@@ -97,7 +105,9 @@ func TestParseFunctionAndFunctionCallWithArgs(t *testing.T) {
 c = a(2, 5)
 `
 	l := lexer.New(input)
-	p := New(l)
+	p, err := New(l)
+	require.Nil(t, err)
+
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
