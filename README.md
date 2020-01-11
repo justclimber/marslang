@@ -16,7 +16,6 @@ a = sum(2, 5)
 ```
 
 # TODO
-* type check on function call
 * Улучшить сообщения об ошибке - при выполнении - стэктрейс + номер строки/позиция
 * control flow - if
 * control flow - for

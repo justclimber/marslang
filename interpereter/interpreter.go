@@ -161,7 +161,7 @@ func ExecFunctionCall(node *ast.FunctionCall, env *object.Environment) (object.O
 
 	switch fn := functionObj.(type) {
 	case *object.Function:
-		err = functionCallArgumentsCheck(fn, args)
+		err = functionCallArgumentsCheck(fn.Arguments, args)
 		if err != nil {
 			return nil, err
 		}
@@ -210,13 +210,18 @@ func execExpressionList(expressions []ast.IExpression, env *object.Environment) 
 	return result, nil
 }
 
-func functionCallArgumentsCheck(fn *object.Function, args []object.Object) error {
-	if len(fn.Arguments) != len(args) {
+func functionCallArgumentsCheck(declaredArgs []*ast.FunctionArg, actualArgValues []object.Object) error {
+	if len(declaredArgs) != len(actualArgValues) {
 		return errors.New(fmt.Sprintf("Function call arguments count micmatch: dectlared %d, but called %d",
-			len(fn.Arguments), len(args)))
+			len(declaredArgs), len(actualArgValues)))
+	}
+	for i, arg := range declaredArgs {
+		if actualArgValues[i].Type() != object.ObjectType(arg.ArgType) {
+			return errors.New(fmt.Sprintf("argument #%d type mismatch: expected '%s' by func declaration but called '%s'",
+				i+1, arg.ArgType, actualArgValues[i].Type()))
+		}
 	}
 
-	//todo: type checking
 	return nil
 }
 
