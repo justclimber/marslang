@@ -1,6 +1,7 @@
 package object
 
 import (
+	"aakimov/marslang/ast"
 	"fmt"
 )
 
@@ -58,8 +59,8 @@ func (rv *ReturnValue) Type() ObjectType { return ReturnValueObj }
 func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
 
 type Function struct {
-	Arguments  interface{}
-	Statements interface{}
+	Arguments  []*ast.FunctionArg
+	Statements *ast.StatementsBlock
 	ReturnType string
 	Env        *Environment
 }

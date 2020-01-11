@@ -370,8 +370,7 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 		return nil, err
 	}
 	statements, err := p.parseBlockOfStatements(token.RBrace)
-	statementsBlock := ast.StatementsBlock{Statements: statements}
-	function.StatementsBlock = statementsBlock
+	function.StatementsBlock = &ast.StatementsBlock{Statements: statements}
 
 	return function, err
 }
