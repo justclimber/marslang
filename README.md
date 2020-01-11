@@ -18,7 +18,6 @@ a = sum(2, 5)
 # TODO
 * control flow - if
 * control flow - for
-* Тип bool
 * Тип string
 * Тип array
 * Поддержка структур

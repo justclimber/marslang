@@ -51,7 +51,6 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	currToken.Pos = l.pos
 
 	simpleTokens := []string{
-		token.Assignment,
 		token.Comma,
 		token.Plus,
 		token.Minus,
@@ -61,6 +60,8 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		token.RParen,
 		token.LBrace,
 		token.RBrace,
+		token.Lt,
+		token.Gt,
 	}
 	for _, simpleToken := range simpleTokens {
 		if string(l.currChar) == simpleToken {
@@ -75,6 +76,24 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	case '\n':
 		currToken.Value = ""
 		currToken.Type = token.EOL
+	case '=':
+		if l.nextChar == '=' {
+			currToken.Value = token.Eq
+			currToken.Type = token.Eq
+			l.read()
+		} else {
+			currToken.Type = token.Assignment
+			currToken.Value = string(l.currChar)
+		}
+	case '!':
+		if l.nextChar == '=' {
+			currToken.Value = token.NotEq
+			currToken.Type = token.NotEq
+			l.read()
+		} else {
+			currToken.Type = token.Bang
+			currToken.Value = string(l.currChar)
+		}
 	case 0:
 		currToken.Value = ""
 		currToken.Type = token.EOF

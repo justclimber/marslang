@@ -7,10 +7,18 @@ const (
 	Assignment = "="
 	Comma      = ","
 
+	// arithmetical operators
 	Plus     = "+"
 	Minus    = "-"
 	Asterisk = "*"
 	Slash    = "/"
+
+	// logical operators
+	Lt    = "<"
+	Gt    = ">"
+	Eq    = "=="
+	NotEq = "!="
+	Bang  = "!"
 
 	NumInt   = "int_num"
 	NumFloat = "float_num"
@@ -22,8 +30,11 @@ const (
 
 	Var = "var"
 
+	// keywords
 	Function = "fn"
 	Return   = "return"
+	True     = "true"
+	False    = "false"
 
 	// type hints
 	Type = "type"
@@ -44,6 +55,8 @@ var keywords = map[string]TokenType{
 	"void":   Type,
 	"int":    Type,
 	"float":  Type,
+	"true":   True,
+	"false":  False,
 }
 
 func LookupIdent(ident string) TokenType {

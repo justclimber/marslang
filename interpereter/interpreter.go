@@ -8,6 +8,12 @@ import (
 	"fmt"
 )
 
+var (
+	ReservedObjNull  = &object.Null{}
+	ReservedObjTrue  = &object.Boolean{Value: true}
+	ReservedObjFalse = &object.Boolean{Value: false}
+)
+
 func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 	var result object.Object
 	var err error
@@ -29,6 +35,8 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		result, err = ExecNumInt(node, env)
 	case *ast.NumFloat:
 		result, err = ExecNumFloat(node, env)
+	case *ast.Boolean:
+		result, err = ExecNumBoolean(node, env)
 	case *ast.Function:
 		result, err = ExecFunction(node, env)
 	case *ast.FunctionCall:
@@ -110,7 +118,7 @@ func ExecBinExpression(node *ast.BinExpression, env *object.Environment) (object
 			left.Type(), right.Type())
 	}
 
-	result, err := computeScalarArithmetic(left, right, node.Operator)
+	result, err := execScalarBinOperation(left, right, node.Operator)
 	return result, err
 }
 
@@ -138,6 +146,10 @@ func ExecNumInt(node *ast.NumInt, env *object.Environment) (object.Object, error
 
 func ExecNumFloat(node *ast.NumFloat, env *object.Environment) (object.Object, error) {
 	return &object.Float{Value: node.Value}, nil
+}
+
+func ExecNumBoolean(node *ast.Boolean, env *object.Environment) (object.Object, error) {
+	return nativeBooleanToBoolean(node.Value), nil
 }
 
 func ExecFunction(node *ast.Function, env *object.Environment) (object.Object, error) {

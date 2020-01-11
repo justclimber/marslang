@@ -9,7 +9,10 @@ import (
 
 func TestNextTokenGeneric(t *testing.T) {
 	input := `a = (5 + 6)
-b = 3
+b = 3 > 2 < 1
+v = b == 1
+z = b != 1
+x = !y == true
 c = fn(int a, int b) int {
    return 3 + a
 }`
@@ -29,6 +32,29 @@ c = fn(int a, int b) int {
 		{token.Var, "b"},
 		{token.Assignment, "="},
 		{token.NumInt, "3"},
+		{token.Gt, ">"},
+		{token.NumInt, "2"},
+		{token.Lt, "<"},
+		{token.NumInt, "1"},
+		{token.EOL, ""},
+		{token.Var, "v"},
+		{token.Assignment, "="},
+		{token.Var, "b"},
+		{token.Eq, "=="},
+		{token.NumInt, "1"},
+		{token.EOL, ""},
+		{token.Var, "z"},
+		{token.Assignment, "="},
+		{token.Var, "b"},
+		{token.NotEq, "!="},
+		{token.NumInt, "1"},
+		{token.EOL, ""},
+		{token.Var, "x"},
+		{token.Assignment, "="},
+		{token.Bang, "!"},
+		{token.Var, "y"},
+		{token.Eq, "=="},
+		{token.True, "true"},
 		{token.EOL, ""},
 		{token.Var, "c"},
 		{token.Assignment, "="},

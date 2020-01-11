@@ -12,21 +12,21 @@ import (
 const (
 	_ int = iota
 	Lowest
-	Assignment  // =
-	Equals      // ==
-	Lessgreater // > or <
-	Sum         // +
-	Product     // *
-	Prefix      // -X or !X
-	Call        // myFunction(X)
-	Index       // array[index]
+	Assignment // =
+	Equals     // ==
+	Comparison // > or <
+	Sum        // +
+	Product    // *
+	Prefix     // -X or !X
+	Call       // myFunction(X)
+	Index      // array[index]
 )
 
 var precedences = map[token.TokenType]int{
-	//token.EQ:       Equals,
-	//token.NOT_EQ:   Equals,
-	//token.LT:       Lessgreater,
-	//token.GT:       Lessgreater,
+	token.Eq:         Equals,
+	token.NotEq:      Equals,
+	token.Lt:         Comparison,
+	token.Gt:         Comparison,
 	token.Assignment: Assignment,
 	token.Plus:       Sum,
 	token.Minus:      Sum,
@@ -69,6 +69,8 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerUnaryExprFunction(token.Minus, p.parseUnaryExpression)
 	p.registerUnaryExprFunction(token.NumInt, p.parseInteger)
 	p.registerUnaryExprFunction(token.NumFloat, p.parseReal)
+	p.registerUnaryExprFunction(token.True, p.parseBoolean)
+	p.registerUnaryExprFunction(token.False, p.parseBoolean)
 	p.registerUnaryExprFunction(token.Var, p.parseIdentifier)
 	p.registerUnaryExprFunction(token.LParen, p.parseGroupedExpression)
 	p.registerUnaryExprFunction(token.Function, p.parseFunction)
@@ -77,6 +79,10 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerBinExprFunction(token.Plus, p.parseBinExpression)
 	p.registerBinExprFunction(token.Minus, p.parseBinExpression)
 	p.registerBinExprFunction(token.Slash, p.parseBinExpression)
+	p.registerBinExprFunction(token.Lt, p.parseBinExpression)
+	p.registerBinExprFunction(token.Gt, p.parseBinExpression)
+	p.registerBinExprFunction(token.Eq, p.parseBinExpression)
+	p.registerBinExprFunction(token.NotEq, p.parseBinExpression)
 	p.registerBinExprFunction(token.Asterisk, p.parseBinExpression)
 	p.registerBinExprFunction(token.Assignment, p.parseBinExpression)
 	p.registerBinExprFunction(token.LParen, p.parseFunctionCall)
@@ -491,6 +497,13 @@ func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {
 	}
 
 	return expression, nil
+}
+
+func (p *Parser) parseBoolean() (ast.IExpression, error) {
+	return &ast.Boolean{
+		Token: p.currToken,
+		Value: p.currToken.Type == token.True,
+	}, nil
 }
 
 func (p *Parser) nextPrecedence() int {
