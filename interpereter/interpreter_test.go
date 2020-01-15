@@ -149,6 +149,19 @@ b = a[2]
 	require.Equal(t, 3.3, varBFloat.Value)
 }
 
+func TestArrayMixedTypeNegative(t *testing.T) {
+	input := `a = int[]{1, 2.1, 3}
+b = a[1]
+`
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+	_, err = Exec(astProgram, object.NewEnvironment())
+	require.NotNil(t, err)
+}
+
 func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
 	l := lexer.New(input)
 	p, err := parser.New(l)

@@ -287,7 +287,7 @@ func ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (obje
 func arrayElementsTypeCheck(node *ast.Array, t string, es []object.Object) error {
 	for i, el := range es {
 		if string(el.Type()) != t {
-			return runtimeError(node, "Element #%d should be type '%s' but '%s' given", i+1, t, el.Type())
+			return runtimeError(node, "Array element #%d should be type '%s' but '%s' given", i+1, t, el.Type())
 		}
 	}
 	return nil
