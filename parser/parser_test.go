@@ -175,3 +175,33 @@ b = 2
 	require.Len(t, astProgram.Statements, 2)
 	assert.IsType(t, &ast.IfStatement{}, astProgram.Statements[0])
 }
+
+func TestArrayAsInvalidStatementNegative(t *testing.T) {
+	input := `int[]{1, 2.1, 3}
+`
+	l := lexer.New(input)
+	p, err := New(l)
+	require.Nil(t, err)
+	_, err = p.Parse()
+	require.NotNil(t, err)
+}
+
+func TestBinExprAsInvalidStatementNegative(t *testing.T) {
+	input := `5 + 10
+`
+	l := lexer.New(input)
+	p, err := New(l)
+	require.Nil(t, err)
+	_, err = p.Parse()
+	require.NotNil(t, err)
+}
+
+func TestInvalidExpr(t *testing.T) {
+	input := `a = 5 + 10 )
+`
+	l := lexer.New(input)
+	p, err := New(l)
+	require.Nil(t, err)
+	_, err = p.Parse()
+	require.NotNil(t, err)
+}
