@@ -23,10 +23,12 @@ const (
 	NumInt   = "int_num"
 	NumFloat = "float_num"
 
-	LParen = "("
-	RParen = ")"
-	LBrace = "{"
-	RBrace = "}"
+	LParen   = "("
+	RParen   = ")"
+	LBrace   = "{"
+	RBrace   = "}"
+	LBracket = "["
+	RBracket = "]"
 
 	Var = "var"
 

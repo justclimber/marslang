@@ -2,10 +2,16 @@ package lexer
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"aakimov/marslang/token"
 )
+
+type expectedTestToken struct {
+	expectedType  token.TokenType
+	expectedValue string
+}
 
 func TestNextTokenGeneric(t *testing.T) {
 	input := `a = (5 + 6)
@@ -17,10 +23,7 @@ c = fn(int a, int b) int {
    return 3 + a
 }`
 
-	tests := []struct {
-		expectedType  token.TokenType
-		expectedValue string
-	}{
+	tests := []expectedTestToken{
 		{token.Var, "a"},
 		{token.Assignment, "="},
 		{token.LParen, "("},
@@ -78,60 +81,60 @@ c = fn(int a, int b) int {
 		{token.EOF, ""},
 	}
 
-	l := New(input)
-
-	for i, tt := range tests {
-		tok, err := l.NextToken()
-		assert.Nil(t, err, "[%d] token lexer error", i)
-		assert.Equal(t, tt.expectedType, tok.Type, "[%d] token type wrong", i)
-		assert.Equal(t, tt.expectedValue, tok.Value, "[%d] token value wrong", i)
-	}
+	testLexerInput(input, tests, t)
 }
 
 func TestReal(t *testing.T) {
 	input := `a = 5.6`
 
-	tests := []struct {
-		expectedType  token.TokenType
-		expectedValue string
-	}{
+	tests := []expectedTestToken{
 		{token.Var, "a"},
 		{token.Assignment, "="},
 		{token.NumFloat, "5.6"},
 		{token.EOF, ""},
 	}
 
-	l := New(input)
+	testLexerInput(input, tests, t)
+}
 
-	for i, tt := range tests {
-		tok, err := l.NextToken()
-		assert.Nil(t, err, "[%d] token lexer error", i)
-		assert.Equal(t, tt.expectedType, tok.Type, "[%d] token type wrong", i)
-		assert.Equal(t, tt.expectedValue, tok.Value, "[%d] token value wrong", i)
+func TestArray(t *testing.T) {
+	input := `arr = int[]{1, 2}
+o = arr[0]`
+	tests := []expectedTestToken{
+		{token.Var, "arr"},
+		{token.Assignment, "="},
+		{token.Type, "int"},
+		{token.LBracket, "["},
+		{token.RBracket, "]"},
+		{token.LBrace, "{"},
+		{token.NumInt, "1"},
+		{token.Comma, ","},
+		{token.NumInt, "2"},
+		{token.RBrace, "}"},
+		{token.EOL, ""},
+		{token.Var, "o"},
+		{token.Assignment, "="},
+		{token.Var, "arr"},
+		{token.LBracket, "["},
+		{token.NumInt, "0"},
+		{token.RBracket, "]"},
+		{token.EOF, ""},
 	}
+
+	testLexerInput(input, tests, t)
 }
 
 func TestRealShort(t *testing.T) {
 	input := `a = 5.`
 
-	tests := []struct {
-		expectedType  token.TokenType
-		expectedValue string
-	}{
+	tests := []expectedTestToken{
 		{token.Var, "a"},
 		{token.Assignment, "="},
 		{token.NumFloat, "5."},
 		{token.EOF, ""},
 	}
 
-	l := New(input)
-
-	for i, tt := range tests {
-		tok, err := l.NextToken()
-		assert.Nil(t, err, "[%d] token lexer error", i)
-		assert.Equal(t, tt.expectedType, tok.Type, "[%d] token type wrong", i)
-		assert.Equal(t, tt.expectedValue, tok.Value, "[%d] token value wrong", i)
-	}
+	testLexerInput(input, tests, t)
 }
 
 func TestGetCurrLineAndPos(t *testing.T) {
@@ -173,4 +176,14 @@ func TestLineAndPosForTokens(t *testing.T) {
 	tok, _ = l.NextToken()
 	assert.Equal(t, 2, tok.Line)
 	assert.Equal(t, 4, tok.Pos)
+}
+
+func testLexerInput(input string, tests []expectedTestToken, t *testing.T) {
+	l := New(input)
+	for i, tt := range tests {
+		tok, err := l.NextToken()
+		require.Nil(t, err, "[%d] token lexer error", i)
+		require.Equal(t, tt.expectedType, tok.Type, "[%d] token type wrong", i)
+		require.Equal(t, tt.expectedValue, tok.Value, "[%d] token value wrong", i)
+	}
 }

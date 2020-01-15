@@ -33,7 +33,7 @@ var precedences = map[token.TokenType]int{
 	token.Slash:      Product,
 	token.Asterisk:   Product,
 	token.LParen:     Call,
-	//token.LBRAKET:  Index,
+	token.LBracket:   Index,
 }
 
 type (
@@ -74,6 +74,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerUnaryExprFunction(token.Var, p.parseIdentifier)
 	p.registerUnaryExprFunction(token.LParen, p.parseGroupedExpression)
 	p.registerUnaryExprFunction(token.Function, p.parseFunction)
+	p.registerUnaryExprFunction(token.Type, p.parseArray)
 
 	p.binExprFunctions = make(map[token.TokenType]binExprFunctions)
 	p.registerBinExprFunction(token.Plus, p.parseBinExpression)
@@ -86,6 +87,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerBinExprFunction(token.Asterisk, p.parseBinExpression)
 	p.registerBinExprFunction(token.Assignment, p.parseBinExpression)
 	p.registerBinExprFunction(token.LParen, p.parseFunctionCall)
+	p.registerBinExprFunction(token.LBracket, p.parseArrayIndexCall)
 
 	return p, nil
 }
@@ -229,7 +231,7 @@ func (p *Parser) parseExpression(precedence int) (ast.IExpression, error) {
 	}
 
 	nextPrecedence := p.nextPrecedence()
-	for !p.nextTokenIn([]token.TokenType{token.EOL, token.RParen, token.LBrace}) && precedence < nextPrecedence {
+	for !p.nextTokenIn([]token.TokenType{token.EOL, token.RParen, token.LBrace, token.RBracket}) && precedence < nextPrecedence {
 		binExprFunction := p.binExprFunctions[p.nextToken.Type]
 		if binExprFunction == nil {
 			err := p.parseError("Unexpected token for binary expression '%s'", p.nextToken.Type)
@@ -479,22 +481,23 @@ func (p *Parser) parseFunctionCall(function ast.IExpression) (ast.IExpression, e
 		return nil, err
 	}
 
-	functionCall.Arguments, err = p.parseFunctionCallArguments()
+	functionCall.Arguments, err = p.parseExpressions(token.RParen)
 
 	return functionCall, err
 }
 
-func (p *Parser) parseFunctionCallArguments() ([]ast.IExpression, error) {
-	var args []ast.IExpression
+func (p *Parser) parseExpressions(closeToken token.TokenType) ([]ast.IExpression, error) {
+	var expressions []ast.IExpression
 
-	if p.currToken.Type == token.RParen {
-		return args, nil
+	if p.currToken.Type == closeToken {
+		return expressions, nil
 	}
+
 	expression, err := p.parseExpression(Lowest)
 	if err != nil {
 		return nil, err
 	}
-	args = append(args, expression)
+	expressions = append(expressions, expression)
 
 	err = p.read()
 	if err != nil {
@@ -509,14 +512,13 @@ func (p *Parser) parseFunctionCallArguments() ([]ast.IExpression, error) {
 		if err != nil {
 			return nil, err
 		}
-		args = append(args, expression)
+		expressions = append(expressions, expression)
 		err = p.read()
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	return args, nil
+	return expressions, nil
 }
 
 func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {
@@ -546,6 +548,61 @@ func (p *Parser) parseBoolean() (ast.IExpression, error) {
 		Token: p.currToken,
 		Value: p.currToken.Type == token.True,
 	}, nil
+}
+
+func (p *Parser) parseArray() (ast.IExpression, error) {
+	node := &ast.Array{
+		Token:        p.currToken,
+		ElementsType: p.currToken.Value,
+	}
+
+	var err error
+	if err = p.requireTokenSequence([]token.TokenType{token.LBracket, token.RBracket}); err != nil {
+		return nil, err
+	}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	var elementExpressions []ast.IExpression
+	if p.currToken.Type == token.LBrace {
+		if err = p.read(); err != nil {
+			return nil, err
+		}
+		elementExpressions, err = p.parseExpressions(token.RBrace)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	node.Elements = elementExpressions
+
+	return node, nil
+}
+
+func (p *Parser) parseArrayIndexCall(array ast.IExpression) (ast.IExpression, error) {
+	node := &ast.ArrayIndexCall{
+		Token: p.currToken,
+		Left:  array,
+	}
+
+	var err error
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	index, err := p.parseExpression(Index)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+	node.Index = index
+
+	return node, nil
 }
 
 func (p *Parser) nextPrecedence() int {

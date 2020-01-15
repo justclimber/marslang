@@ -60,6 +60,8 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		token.RParen,
 		token.LBrace,
 		token.RBrace,
+		token.LBracket,
+		token.RBracket,
 		token.Lt,
 		token.Gt,
 	}

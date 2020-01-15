@@ -43,6 +43,10 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		result, err = ExecFunctionCall(node, env)
 	case *ast.IfStatement:
 		result, err = ExecIfStatement(node, env)
+	case *ast.Array:
+		result, err = ExecArray(node, env)
+	case *ast.ArrayIndexCall:
+		result, err = ExecArrayIndexCall(node, env)
 	}
 	if err != nil {
 		return nil, err
@@ -232,6 +236,61 @@ func ExecIfStatement(node *ast.IfStatement, env *object.Environment) (object.Obj
 	} else {
 		return nil, nil
 	}
+}
+
+func ExecArray(node *ast.Array, env *object.Environment) (object.Object, error) {
+	elements, err := execExpressionList(node.Elements, env)
+	if err != nil {
+		return nil, err
+	}
+	if err = arrayElementsTypeCheck(node, node.ElementsType, elements); err != nil {
+		return nil, err
+	}
+
+	arrayObj := &object.Array{
+		ElementsType: node.ElementsType,
+		Elements:     elements,
+	}
+
+	return arrayObj, nil
+}
+
+func ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (object.Object, error) {
+	left, err := Exec(node.Left, env)
+	if err != nil {
+		return nil, err
+	}
+
+	index, err := Exec(node.Index, env)
+	if err != nil {
+		return nil, err
+	}
+
+	if index.Type() != object.IntegerObj {
+		return nil, runtimeError(node, "Array access can be only by 'int' type but '%s' given", index.Type())
+	}
+	if left.Type() != object.ArrayObj {
+		return nil, runtimeError(node, "Array access can be only on arrays but '%s' given", left.Type())
+	}
+
+	arrayObj, _ := left.(*object.Array)
+	indexObj, _ := index.(*object.Integer)
+
+	i := indexObj.Value
+	if i < 0 || int(i) > len(arrayObj.Elements)-1 {
+		return nil, runtimeError(node, "Array access out of bounds: '%d'", i)
+	}
+
+	return arrayObj.Elements[i], nil
+}
+
+func arrayElementsTypeCheck(node *ast.Array, t string, es []object.Object) error {
+	for i, el := range es {
+		if string(el.Type()) != t {
+			return runtimeError(node, "Element #%d should be type '%s' but '%s' given", i+1, t, el.Type())
+		}
+	}
+	return nil
 }
 
 func functionReturnTypeCheck(node *ast.FunctionCall, result object.Object, functionReturnType string) error {

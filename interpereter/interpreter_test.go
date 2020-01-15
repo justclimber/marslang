@@ -11,17 +11,8 @@ import (
 func TestParenthesis(t *testing.T) {
 	input := `a = (1 + 2) * 3
 `
-	l := lexer.New(input)
-	p, err := parser.New(l)
-	require.Nil(t, err)
+	env := testExecAngGetEnv(t, input)
 
-	env := object.NewEnvironment()
-
-	astProgram, err := p.Parse()
-	require.Nil(t, err)
-
-	_, err = Exec(astProgram, env)
-	require.Nil(t, err)
 	varA, ok := env.Get("a")
 
 	require.True(t, ok)
@@ -37,17 +28,8 @@ func TestFunctionCallWith2Args(t *testing.T) {
 }
 c = a(2, 5)
 `
-	l := lexer.New(input)
-	p, err := parser.New(l)
-	require.Nil(t, err)
+	env := testExecAngGetEnv(t, input)
 
-	env := object.NewEnvironment()
-
-	astProgram, err := p.Parse()
-	require.Nil(t, err)
-
-	_, err = Exec(astProgram, env)
-	require.Nil(t, err)
 	varC, ok := env.Get("c")
 
 	require.True(t, ok)
@@ -63,17 +45,8 @@ func TestFunctionCallWith1Args(t *testing.T) {
 }
 c = a(2)
 `
-	l := lexer.New(input)
-	p, err := parser.New(l)
-	require.Nil(t, err)
+	env := testExecAngGetEnv(t, input)
 
-	env := object.NewEnvironment()
-
-	astProgram, err := p.Parse()
-	require.Nil(t, err)
-
-	_, err = Exec(astProgram, env)
-	require.Nil(t, err)
 	varC, ok := env.Get("c")
 
 	require.True(t, ok)
@@ -87,17 +60,7 @@ func TestUnaryMinusOperator(t *testing.T) {
 	input := `a = -5
 b = -a
 `
-	l := lexer.New(input)
-	p, err := parser.New(l)
-	require.Nil(t, err)
-
-	env := object.NewEnvironment()
-
-	astProgram, err := p.Parse()
-	require.Nil(t, err)
-
-	_, err = Exec(astProgram, env)
-	require.Nil(t, err)
+	env := testExecAngGetEnv(t, input)
 
 	varA, ok := env.Get("a")
 
@@ -121,17 +84,7 @@ func TestExecIfStatement(t *testing.T) {
     a = 10
 }
 `
-	l := lexer.New(input)
-	p, err := parser.New(l)
-	require.Nil(t, err)
-
-	env := object.NewEnvironment()
-
-	astProgram, err := p.Parse()
-	require.Nil(t, err)
-
-	_, err = Exec(astProgram, env)
-	require.Nil(t, err)
+	env := testExecAngGetEnv(t, input)
 
 	_, ok := env.Get("a")
 	require.False(t, ok)
@@ -144,17 +97,7 @@ func TestExecIfStatementWithElseBranch(t *testing.T) {
     b = 20
 }
 `
-	l := lexer.New(input)
-	p, err := parser.New(l)
-	require.Nil(t, err)
-
-	env := object.NewEnvironment()
-
-	astProgram, err := p.Parse()
-	require.Nil(t, err)
-
-	_, err = Exec(astProgram, env)
-	require.Nil(t, err)
+	env := testExecAngGetEnv(t, input)
 
 	varA, ok := env.Get("a")
 
@@ -166,4 +109,54 @@ func TestExecIfStatementWithElseBranch(t *testing.T) {
 
 	_, ok = env.Get("b")
 	require.False(t, ok)
+}
+
+func TestArrayOfInt(t *testing.T) {
+	input := `a = int[]{1, 2, 3}
+b = a[1]
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Array{}, varA)
+
+	varB, ok := env.Get("b")
+	require.IsType(t, &object.Integer{}, varB)
+	require.True(t, ok)
+
+	varBInt, _ := varB.(*object.Integer)
+	require.Equal(t, int64(2), varBInt.Value)
+}
+
+func TestArrayOfFloat(t *testing.T) {
+	input := `a = float[]{1., 2., 3.3}
+b = a[2]
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Array{}, varA)
+
+	varB, ok := env.Get("b")
+	require.IsType(t, &object.Float{}, varB)
+	require.True(t, ok)
+
+	varBFloat, _ := varB.(*object.Float)
+	require.Equal(t, 3.3, varBFloat.Value)
+}
+
+func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+	env := object.NewEnvironment()
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+	_, err = Exec(astProgram, env)
+	require.Nil(t, err)
+	return env
 }

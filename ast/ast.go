@@ -59,6 +59,18 @@ type Boolean struct {
 	Value bool
 }
 
+type Array struct {
+	Token        token.Token
+	ElementsType string
+	Elements     []IExpression
+}
+
+type ArrayIndexCall struct {
+	Token token.Token
+	Left  IExpression
+	Index IExpression
+}
+
 type Return struct {
 	Token       token.Token
 	ReturnValue IExpression
@@ -96,6 +108,8 @@ func (node *BinExpression) GetToken() token.Token   { return node.Token }
 func (node *Identifier) GetToken() token.Token      { return node.Token }
 func (node *NumInt) GetToken() token.Token          { return node.Token }
 func (node *NumFloat) GetToken() token.Token        { return node.Token }
+func (node *Array) GetToken() token.Token           { return node.Token }
+func (node *ArrayIndexCall) GetToken() token.Token  { return node.Token }
 func (node *Boolean) GetToken() token.Token         { return node.Token }
 func (node *Return) GetToken() token.Token          { return node.Token }
 func (node *Function) GetToken() token.Token        { return node.Token }

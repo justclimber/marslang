@@ -2,7 +2,9 @@ package object
 
 import (
 	"aakimov/marslang/ast"
+	"bytes"
 	"fmt"
+	"strings"
 )
 
 type ObjectType string
@@ -12,6 +14,7 @@ const (
 	FloatObj       = "float"
 	BooleanObj     = "bool"
 	NullObj        = "null"
+	ArrayObj       = "array"
 	ReturnValueObj = "return_value"
 	FunctionObj    = "function_obj"
 	BuiltinFnObj   = "builtin_fn_obj"
@@ -50,6 +53,28 @@ type Null struct{}
 
 func (n *Null) Type() ObjectType { return NullObj }
 func (n *Null) Inspect() string  { return "null" }
+
+type Array struct {
+	ElementsType string
+	Elements     []Object
+}
+
+func (a *Array) Type() ObjectType { return ArrayObj }
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+
+	var elements []string
+	for _, e := range a.Elements {
+		elements = append(elements, e.Inspect())
+	}
+
+	out.WriteString(a.ElementsType)
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
 
 type ReturnValue struct {
 	Value Object
