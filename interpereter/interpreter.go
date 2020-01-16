@@ -47,6 +47,10 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		result, err = ExecArray(node, env)
 	case *ast.ArrayIndexCall:
 		result, err = ExecArrayIndexCall(node, env)
+	case *ast.StructDefinition:
+		err = RegisterStructDefinition(node, env)
+	default:
+		err = runtimeError(node, "Unknown ast node to execute: %T", node)
 	}
 	if err != nil {
 		return nil, err
@@ -284,6 +288,17 @@ func ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (obje
 	return arrayObj.Elements[i], nil
 }
 
+func RegisterStructDefinition(node *ast.StructDefinition, env *object.Environment) error {
+	s := &object.StructDefinition{
+		Name:   node.Name,
+		Fields: node.Fields,
+	}
+	if err := env.RegisterStructDefinition(s); err != nil {
+		return err
+	}
+	return nil
+}
+
 func arrayElementsTypeCheck(node *ast.Array, t string, es []object.Object) error {
 	for i, el := range es {
 		if string(el.Type()) != t {
@@ -310,17 +325,17 @@ func functionReturnTypeCheck(node *ast.FunctionCall, result object.Object, funct
 	return nil
 }
 
-func functionCallArgumentsCheck(node *ast.FunctionCall, declaredArgs []*ast.FunctionArg, actualArgValues []object.Object) error {
+func functionCallArgumentsCheck(node *ast.FunctionCall, declaredArgs []*ast.VarAndType, actualArgValues []object.Object) error {
 	if len(declaredArgs) != len(actualArgValues) {
-		return runtimeError(node, "Function call arguments count micmatch: dectlared %d, but called %d",
+		return runtimeError(node, "Function call arguments count mismatch: declared %d, but called %d",
 			len(declaredArgs), len(actualArgValues))
 	}
 
 	if len(actualArgValues) > 0 {
 		for i, arg := range declaredArgs {
-			if actualArgValues[i].Type() != object.ObjectType(arg.ArgType) {
+			if actualArgValues[i].Type() != object.ObjectType(arg.VarType) {
 				return runtimeError(arg, "argument #%d type mismatch: expected '%s' by func declaration but called '%s'",
-					i+1, arg.ArgType, actualArgValues[i].Type())
+					i+1, arg.VarType, actualArgValues[i].Type())
 			}
 		}
 	}
@@ -332,7 +347,7 @@ func transferArgsToNewEnv(fn *object.Function, args []object.Object) *object.Env
 	env := object.NewEnclosedEnvironment(fn.Env)
 
 	for i, arg := range fn.Arguments {
-		env.Set(arg.Arg.Value, args[i])
+		env.Set(arg.Var.Value, args[i])
 	}
 
 	return env

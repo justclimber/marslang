@@ -24,7 +24,7 @@ c = fn(int a, int b) int {
 }`
 
 	tests := []expectedTestToken{
-		{token.Var, "a"},
+		{token.Ident, "a"},
 		{token.Assignment, "="},
 		{token.LParen, "("},
 		{token.NumInt, "5"},
@@ -32,7 +32,7 @@ c = fn(int a, int b) int {
 		{token.NumInt, "6"},
 		{token.RParen, ")"},
 		{token.EOL, ""},
-		{token.Var, "b"},
+		{token.Ident, "b"},
 		{token.Assignment, "="},
 		{token.NumInt, "3"},
 		{token.Gt, ">"},
@@ -40,34 +40,34 @@ c = fn(int a, int b) int {
 		{token.Lt, "<"},
 		{token.NumInt, "1"},
 		{token.EOL, ""},
-		{token.Var, "v"},
+		{token.Ident, "v"},
 		{token.Assignment, "="},
-		{token.Var, "b"},
+		{token.Ident, "b"},
 		{token.Eq, "=="},
 		{token.NumInt, "1"},
 		{token.EOL, ""},
-		{token.Var, "z"},
+		{token.Ident, "z"},
 		{token.Assignment, "="},
-		{token.Var, "b"},
+		{token.Ident, "b"},
 		{token.NotEq, "!="},
 		{token.NumInt, "1"},
 		{token.EOL, ""},
-		{token.Var, "x"},
+		{token.Ident, "x"},
 		{token.Assignment, "="},
 		{token.Bang, "!"},
-		{token.Var, "y"},
+		{token.Ident, "y"},
 		{token.Eq, "=="},
 		{token.True, "true"},
 		{token.EOL, ""},
-		{token.Var, "c"},
+		{token.Ident, "c"},
 		{token.Assignment, "="},
 		{token.Function, "fn"},
 		{token.LParen, "("},
 		{token.Type, "int"},
-		{token.Var, "a"},
+		{token.Ident, "a"},
 		{token.Comma, ","},
 		{token.Type, "int"},
-		{token.Var, "b"},
+		{token.Ident, "b"},
 		{token.RParen, ")"},
 		{token.Type, "int"},
 		{token.LBrace, "{"},
@@ -75,7 +75,7 @@ c = fn(int a, int b) int {
 		{token.Return, "return"},
 		{token.NumInt, "3"},
 		{token.Plus, "+"},
-		{token.Var, "a"},
+		{token.Ident, "a"},
 		{token.EOL, ""},
 		{token.RBrace, "}"},
 		{token.EOF, ""},
@@ -88,7 +88,7 @@ func TestReal(t *testing.T) {
 	input := `a = 5.6`
 
 	tests := []expectedTestToken{
-		{token.Var, "a"},
+		{token.Ident, "a"},
 		{token.Assignment, "="},
 		{token.NumFloat, "5.6"},
 		{token.EOF, ""},
@@ -101,7 +101,7 @@ func TestArray(t *testing.T) {
 	input := `arr = int[]{1, 2}
 o = arr[0]`
 	tests := []expectedTestToken{
-		{token.Var, "arr"},
+		{token.Ident, "arr"},
 		{token.Assignment, "="},
 		{token.Type, "int"},
 		{token.LBracket, "["},
@@ -112,9 +112,9 @@ o = arr[0]`
 		{token.NumInt, "2"},
 		{token.RBrace, "}"},
 		{token.EOL, ""},
-		{token.Var, "o"},
+		{token.Ident, "o"},
 		{token.Assignment, "="},
-		{token.Var, "arr"},
+		{token.Ident, "arr"},
 		{token.LBracket, "["},
 		{token.NumInt, "0"},
 		{token.RBracket, "]"},
@@ -128,9 +128,33 @@ func TestRealShort(t *testing.T) {
 	input := `a = 5.`
 
 	tests := []expectedTestToken{
-		{token.Var, "a"},
+		{token.Ident, "a"},
 		{token.Assignment, "="},
 		{token.NumFloat, "5."},
+		{token.EOF, ""},
+	}
+
+	testLexerInput(input, tests, t)
+}
+
+func TestStruct(t *testing.T) {
+	input := `struct point {
+   float x
+   float y
+}`
+
+	tests := []expectedTestToken{
+		{token.Struct, "struct"},
+		{token.Ident, "point"},
+		{token.LBrace, "{"},
+		{token.EOL, ""},
+		{token.Type, "float"},
+		{token.Ident, "x"},
+		{token.EOL, ""},
+		{token.Type, "float"},
+		{token.Ident, "y"},
+		{token.EOL, ""},
+		{token.RBrace, "}"},
 		{token.EOF, ""},
 	}
 

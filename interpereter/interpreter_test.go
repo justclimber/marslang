@@ -4,6 +4,7 @@ import (
 	"aakimov/marslang/lexer"
 	"aakimov/marslang/object"
 	"aakimov/marslang/parser"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -147,6 +148,22 @@ b = a[2]
 
 	varBFloat, _ := varB.(*object.Float)
 	require.Equal(t, 3.3, varBFloat.Value)
+}
+
+func TestStruct(t *testing.T) {
+	input := `struct point {
+   float x
+   float y
+}
+`
+	env := testExecAngGetEnv(t, input)
+	s, ok := env.GetStructDefinition("point")
+	require.True(t, ok)
+	require.Len(t, s.Fields, 2)
+	assert.Equal(t, s.Fields[0].VarType, "float")
+	assert.Equal(t, s.Fields[0].Var.Value, "x")
+	assert.Equal(t, s.Fields[1].VarType, "float")
+	assert.Equal(t, s.Fields[1].Var.Value, "y")
 }
 
 func TestArrayMixedTypeNegative(t *testing.T) {

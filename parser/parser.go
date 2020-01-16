@@ -71,7 +71,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerUnaryExprFunction(token.NumFloat, p.parseReal)
 	p.registerUnaryExprFunction(token.True, p.parseBoolean)
 	p.registerUnaryExprFunction(token.False, p.parseBoolean)
-	p.registerUnaryExprFunction(token.Var, p.parseIdentifier)
+	p.registerUnaryExprFunction(token.Ident, p.parseIdentifier)
 	p.registerUnaryExprFunction(token.LParen, p.parseGroupedExpression)
 	p.registerUnaryExprFunction(token.Function, p.parseFunction)
 	p.registerUnaryExprFunction(token.Type, p.parseArray)
@@ -132,7 +132,7 @@ func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.
 
 func (p *Parser) parseStatement() (ast.IStatement, error) {
 	switch p.currToken.Type {
-	case token.Var:
+	case token.Ident:
 		if p.nextToken.Type == token.LParen {
 			function := &ast.Identifier{
 				Token: p.currToken,
@@ -142,18 +142,16 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 			if err != nil {
 				return nil, err
 			}
-			astNode, err := p.parseFunctionCall(function)
-			return astNode, err
+			return p.parseFunctionCall(function)
 		} else {
-			astNode, err := p.parseAssignment()
-			return astNode, err
+			return p.parseAssignment()
 		}
 	case token.Return:
-		astNode, err := p.parseReturn()
-		return astNode, err
+		return p.parseReturn()
 	case token.If:
-		astNode, err := p.parseIfStatement()
-		return astNode, err
+		return p.parseIfStatement()
+	case token.Struct:
+		return p.parseStructDefinition()
 	case token.EOL:
 		return nil, nil
 	default:
@@ -162,7 +160,7 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 }
 
 func (p *Parser) parseAssignment() (*ast.Assignment, error) {
-	tok, err := p.getExpectedToken(token.Var)
+	tok, err := p.getExpectedToken(token.Ident)
 	if err != nil {
 		return &ast.Assignment{}, err
 	}
@@ -361,6 +359,39 @@ func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 	return stmt, nil
 }
 
+func (p *Parser) parseStructDefinition() (ast.IExpression, error) {
+	node := &ast.StructDefinition{Token: p.currToken}
+
+	if err := p.read(); err != nil {
+		return nil, err
+	}
+	name, err := p.getExpectedToken(token.Ident)
+	if err != nil {
+		return nil, err
+	}
+	node.Name = name.Value
+
+	if err := p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
+		return nil, err
+	}
+
+	if err := p.read(); err != nil {
+		return nil, err
+	}
+
+	fields, err := p.parseVarAndTypes(token.RBrace, token.EOL)
+	if err != nil {
+		return nil, err
+	}
+	if len(fields) == 0 {
+		return nil, p.parseError("Struct should contain at least 1 field")
+	}
+
+	node.Fields = fields
+
+	return node, nil
+}
+
 func (p *Parser) parseFunction() (ast.IExpression, error) {
 	function := &ast.Function{Token: p.currToken}
 
@@ -377,7 +408,7 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 	if err != nil {
 		return nil, err
 	}
-	function.Arguments, err = p.parseFunctionArgs()
+	function.Arguments, err = p.parseVarAndTypes(token.RParen, token.Comma)
 	if err != nil {
 		return nil, err
 	}
@@ -425,20 +456,20 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 	return function, err
 }
 
-func (p *Parser) parseFunctionArgs() ([]*ast.FunctionArg, error) {
-	arguments := make([]*ast.FunctionArg, 0)
+func (p *Parser) parseVarAndTypes(endToken token.TokenType, delimiterToken token.TokenType) ([]*ast.VarAndType, error) {
+	vars := make([]*ast.VarAndType, 0)
 
 	for p.currToken.Type == token.Type {
-		argument := &ast.FunctionArg{
+		argument := &ast.VarAndType{
 			Token:   p.currToken,
-			ArgType: p.currToken.Value,
+			VarType: p.currToken.Value,
 		}
 
 		err := p.read()
 		if err != nil {
 			return nil, err
 		}
-		_, err = p.getExpectedToken(token.Var)
+		_, err = p.getExpectedToken(token.Ident)
 		if err != nil {
 			return nil, err
 		}
@@ -448,16 +479,16 @@ func (p *Parser) parseFunctionArgs() ([]*ast.FunctionArg, error) {
 			return nil, err
 		}
 
-		argument.Arg, _ = argVar.(*ast.Identifier)
+		argument.Var, _ = argVar.(*ast.Identifier)
 
-		arguments = append(arguments, argument)
+		vars = append(vars, argument)
 
-		if p.nextToken.Type != token.RParen {
+		if p.nextToken.Type != endToken {
 			err = p.read()
 			if err != nil {
 				return nil, err
 			}
-			_, err := p.getExpectedToken(token.Comma)
+			_, err := p.getExpectedToken(delimiterToken)
 			if err != nil {
 				return nil, err
 			}
@@ -468,7 +499,7 @@ func (p *Parser) parseFunctionArgs() ([]*ast.FunctionArg, error) {
 		}
 	}
 
-	return arguments, nil
+	return vars, nil
 }
 
 func (p *Parser) parseFunctionCall(function ast.IExpression) (ast.IExpression, error) {

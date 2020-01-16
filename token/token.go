@@ -30,9 +30,10 @@ const (
 	LBracket = "["
 	RBracket = "]"
 
-	Var = "var"
+	Ident = "ident"
 
 	// keywords
+	Struct   = "struct"
 	Function = "fn"
 	Return   = "return"
 	True     = "true"
@@ -63,6 +64,7 @@ var keywords = map[string]TokenType{
 	"false":  False,
 	"if":     If,
 	"else":   Else,
+	"struct": Struct,
 }
 
 func LookupIdent(ident string) TokenType {
@@ -70,5 +72,5 @@ func LookupIdent(ident string) TokenType {
 		return keywordToken
 	}
 
-	return Var
+	return Ident
 }
