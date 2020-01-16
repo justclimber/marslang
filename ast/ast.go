@@ -22,7 +22,7 @@ type StatementsBlock struct {
 
 type Assignment struct {
 	Token token.Token
-	Name  Identifier
+	Name  *Identifier
 	Value IExpression
 }
 
@@ -105,7 +105,13 @@ type IfStatement struct {
 type StructDefinition struct {
 	Token  token.Token
 	Name   string
-	Fields []*VarAndType
+	Fields map[string]*VarAndType
+}
+
+type Struct struct {
+	Token  token.Token
+	Ident  *Identifier
+	Fields []*Assignment
 }
 
 func (node *Assignment) GetToken() token.Token       { return node.Token }
@@ -123,6 +129,7 @@ func (node *VarAndType) GetToken() token.Token       { return node.Token }
 func (node *FunctionCall) GetToken() token.Token     { return node.Token }
 func (node *IfStatement) GetToken() token.Token      { return node.Token }
 func (node *StructDefinition) GetToken() token.Token { return node.Token }
+func (node *Struct) GetToken() token.Token           { return node.Token }
 func (node *StatementsBlock) GetToken() token.Token {
 	if len(node.Statements) > 0 {
 		return node.Statements[0].GetToken()

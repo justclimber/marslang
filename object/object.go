@@ -28,7 +28,7 @@ type Object interface {
 
 type StructDefinition struct {
 	Name   string
-	Fields []*ast.VarAndType
+	Fields map[string]*ast.VarAndType
 }
 
 type IIdentifier interface{}
@@ -103,7 +103,7 @@ func (f *Function) Inspect() string {
 
 type Struct struct {
 	Definition *StructDefinition
-	Fields     []Object
+	Fields     map[string]Object
 }
 
 func (s *Struct) Type() ObjectType { return ObjectType(s.Definition.Name) }

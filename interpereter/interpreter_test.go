@@ -150,7 +150,7 @@ b = a[2]
 	require.Equal(t, 3.3, varBFloat.Value)
 }
 
-func TestStruct(t *testing.T) {
+func TestRegisterStructDefinition(t *testing.T) {
 	input := `struct point {
    float x
    float y
@@ -160,10 +160,79 @@ func TestStruct(t *testing.T) {
 	s, ok := env.GetStructDefinition("point")
 	require.True(t, ok)
 	require.Len(t, s.Fields, 2)
-	assert.Equal(t, s.Fields[0].VarType, "float")
-	assert.Equal(t, s.Fields[0].Var.Value, "x")
-	assert.Equal(t, s.Fields[1].VarType, "float")
-	assert.Equal(t, s.Fields[1].Var.Value, "y")
+	assert.Equal(t, "float", s.Fields["x"].VarType)
+	assert.Equal(t, "x", s.Fields["x"].Var.Value)
+	assert.Equal(t, "float", s.Fields["y"].VarType)
+	assert.Equal(t, "y", s.Fields["y"].Var.Value)
+}
+
+func TestStructVarDeclaration(t *testing.T) {
+	input := `struct point {
+   float x
+   float y
+}
+p = point{x = 1., y = 2.}
+`
+	env := testExecAngGetEnv(t, input)
+
+	varP, ok := env.Get("p")
+	require.True(t, ok)
+	require.IsType(t, &object.Struct{}, varP)
+
+	varPStruct, _ := varP.(*object.Struct)
+	require.IsType(t, &object.Float{}, varPStruct.Fields["x"])
+	require.IsType(t, &object.Float{}, varPStruct.Fields["y"])
+
+	varPStructX, _ := varPStruct.Fields["x"].(*object.Float)
+	require.Equal(t, 1., varPStructX.Value)
+}
+
+func TestStructVarDeclarationTypeMismatchNegative(t *testing.T) {
+	input := `struct point {
+   float x
+   float y
+}
+p = point{x = 1., y = 2}
+`
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+	_, err = Exec(astProgram, object.NewEnvironment())
+	require.NotNil(t, err, "Should be error type mismatch")
+}
+
+func TestStructVarDeclarationVarNameMismatchNegative(t *testing.T) {
+	input := `struct point {
+   float x
+   float y
+}
+p = point{x = 1., z = 2.}
+`
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+	_, err = Exec(astProgram, object.NewEnvironment())
+	require.NotNil(t, err, "Should be error var mismatch")
+}
+
+func TestStructVarDeclarationNotAllVarsFilledNegative(t *testing.T) {
+	input := `struct point {
+   float x
+   float y
+}
+p = point{x = 1.}
+`
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+	_, err = Exec(astProgram, object.NewEnvironment())
+	require.NotNil(t, err, "Should be error not all struct vars filled")
 }
 
 func TestArrayMixedTypeNegative(t *testing.T) {

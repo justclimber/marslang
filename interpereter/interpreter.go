@@ -49,6 +49,8 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		result, err = ExecArrayIndexCall(node, env)
 	case *ast.StructDefinition:
 		err = RegisterStructDefinition(node, env)
+	case *ast.Struct:
+		result, err = ExecStruct(node, env)
 	default:
 		err = runtimeError(node, "Unknown ast node to execute: %T", node)
 	}
@@ -295,6 +297,56 @@ func RegisterStructDefinition(node *ast.StructDefinition, env *object.Environmen
 	}
 	if err := env.RegisterStructDefinition(s); err != nil {
 		return err
+	}
+	return nil
+}
+
+func ExecStruct(node *ast.Struct, env *object.Environment) (object.Object, error) {
+	definition, ok := env.GetStructDefinition(node.Ident.Value)
+	if !ok {
+		return nil, runtimeError(node, "Struct '%s' is not defined", node.Ident.Value)
+	}
+	fields := make(map[string]object.Object)
+	for _, n := range node.Fields {
+		result, err := Exec(n.Value, env)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = structTypeAndVarsChecks(n, definition, result); err != nil {
+			return nil, err
+		}
+
+		fields[n.Name.Value] = result
+	}
+	if len(fields) != len(definition.Fields) {
+		return nil, runtimeError(node,
+			"Var of struct '%s' should have %d fields filled but in fact only %d",
+			definition.Name,
+			len(definition.Fields),
+			len(fields))
+	}
+	obj := &object.Struct{
+		Definition: definition,
+		Fields:     fields,
+	}
+
+	return obj, nil
+}
+
+func structTypeAndVarsChecks(n *ast.Assignment, definition *object.StructDefinition, result object.Object) error {
+	fieldFromDefinition, ok := definition.Fields[n.Name.Value]
+	if !ok {
+		return runtimeError(
+			n, "Struct '%s' doesn't have the field '%s' in the definition", definition.Name, n.Name.Value)
+	}
+	if fieldFromDefinition.VarType != string(result.Type()) {
+		return runtimeError(
+			n,
+			"Field '%s' defined as '%s' but '%s' given",
+			n.Name.Value,
+			fieldFromDefinition.VarType,
+			result.Type())
 	}
 	return nil
 }

@@ -1,11 +1,19 @@
 package token
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
+	None = ""
+
 	EOL = "EOL"
 	EOF = "EOF"
 
 	Assignment = "="
 	Comma      = ","
+	Colon      = ":"
 
 	// arithmetical operators
 	Plus     = "+"
@@ -73,4 +81,16 @@ func LookupIdent(ident string) TokenType {
 	}
 
 	return Ident
+}
+
+func GetTokenTypes(tokens TokenType) []TokenType {
+	return []TokenType{tokens}
+}
+
+func GetTokensString(tokens []TokenType) string {
+	var s []string
+	for _, t := range tokens {
+		s = append(s, fmt.Sprintf("'%s'", t))
+	}
+	return strings.Join(s, ", ")
 }
