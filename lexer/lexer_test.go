@@ -142,7 +142,8 @@ func TestStruct(t *testing.T) {
    float x
    float y
 }
-p = point{x = 1., y = 2.}`
+p = point{x = 1., y = 2.}
+px = p.x`
 
 	tests := []expectedTestToken{
 		{token.Struct, "struct"},
@@ -169,6 +170,12 @@ p = point{x = 1., y = 2.}`
 		{token.Assignment, "="},
 		{token.NumFloat, "2."},
 		{token.RBrace, "}"},
+		{token.EOL, ""},
+		{token.Ident, "px"},
+		{token.Assignment, "="},
+		{token.Ident, "p"},
+		{token.Dot, "."},
+		{token.Ident, "x"},
 		{token.EOF, ""},
 	}
 

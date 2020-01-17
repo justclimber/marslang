@@ -19,12 +19,17 @@ if c > 8 {
 } else {
     print(false)
 }
+struct point {
+   float x
+   float y
+}
+p = point{x = 1., y = 2.}
+px = p.x
 ```
 
 # TODO
 * control flow - for
 * Тип string
-* Поддержка структур
 * Поддержка пакетов
 * Расчет костов исполнения программы
 * Контроль глубины стэка вызовов

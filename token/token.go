@@ -13,6 +13,7 @@ const (
 
 	Assignment = "="
 	Comma      = ","
+	Dot        = "."
 	Colon      = ":"
 
 	// arithmetical operators

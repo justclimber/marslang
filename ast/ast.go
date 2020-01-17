@@ -114,6 +114,12 @@ type Struct struct {
 	Fields []*Assignment
 }
 
+type StructFieldCall struct {
+	Token      token.Token
+	StructExpr IExpression
+	Field      *Identifier
+}
+
 func (node *Assignment) GetToken() token.Token       { return node.Token }
 func (node *UnaryExpression) GetToken() token.Token  { return node.Token }
 func (node *BinExpression) GetToken() token.Token    { return node.Token }
@@ -130,6 +136,7 @@ func (node *FunctionCall) GetToken() token.Token     { return node.Token }
 func (node *IfStatement) GetToken() token.Token      { return node.Token }
 func (node *StructDefinition) GetToken() token.Token { return node.Token }
 func (node *Struct) GetToken() token.Token           { return node.Token }
+func (node *StructFieldCall) GetToken() token.Token  { return node.Token }
 func (node *StatementsBlock) GetToken() token.Token {
 	if len(node.Statements) > 0 {
 		return node.Statements[0].GetToken()

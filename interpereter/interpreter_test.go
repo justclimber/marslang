@@ -166,12 +166,13 @@ func TestRegisterStructDefinition(t *testing.T) {
 	assert.Equal(t, "y", s.Fields["y"].Var.Value)
 }
 
-func TestStructVarDeclaration(t *testing.T) {
+func TestStruct(t *testing.T) {
 	input := `struct point {
    float x
    float y
 }
 p = point{x = 1., y = 2.}
+px = p.x
 `
 	env := testExecAngGetEnv(t, input)
 
@@ -185,6 +186,13 @@ p = point{x = 1., y = 2.}
 
 	varPStructX, _ := varPStruct.Fields["x"].(*object.Float)
 	require.Equal(t, 1., varPStructX.Value)
+
+	varPx, ok := env.Get("px")
+	require.True(t, ok)
+	require.IsType(t, &object.Float{}, varPx)
+
+	varPxFloat, _ := varPx.(*object.Float)
+	require.Equal(t, 1., varPxFloat.Value)
 }
 
 func TestStructVarDeclarationTypeMismatchNegative(t *testing.T) {

@@ -51,6 +51,8 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		err = RegisterStructDefinition(node, env)
 	case *ast.Struct:
 		result, err = ExecStruct(node, env)
+	case *ast.StructFieldCall:
+		result, err = ExecStructFieldCall(node, env)
 	default:
 		err = runtimeError(node, "Unknown ast node to execute: %T", node)
 	}
@@ -332,6 +334,25 @@ func ExecStruct(node *ast.Struct, env *object.Environment) (object.Object, error
 	}
 
 	return obj, nil
+}
+
+func ExecStructFieldCall(node *ast.StructFieldCall, env *object.Environment) (object.Object, error) {
+	left, err := Exec(node.StructExpr, env)
+	if err != nil {
+		return nil, err
+	}
+
+	structObj, ok := left.(*object.Struct)
+	if !ok {
+		return nil, runtimeError(node, "Field access can be only on struct but '%s' given", left.Type())
+	}
+
+	fieldObj, ok := structObj.Fields[node.Field.Value]
+	if !ok {
+		return nil, runtimeError(node, "Struct '%s' doesn't have field '%s'", structObj.Definition.Name, node.Field.Value)
+	}
+
+	return fieldObj, nil
 }
 
 func structTypeAndVarsChecks(n *ast.Assignment, definition *object.StructDefinition, result object.Object) error {

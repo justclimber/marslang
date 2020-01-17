@@ -35,6 +35,7 @@ var precedences = map[token.TokenType]int{
 	token.LParen:     Call,
 	token.LBracket:   Index,
 	token.LBrace:     Index,
+	token.Dot:        Index,
 }
 
 type (
@@ -90,6 +91,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerBinExprFunction(token.LParen, p.parseFunctionCall)
 	p.registerBinExprFunction(token.LBracket, p.parseArrayIndexCall)
 	p.registerBinExprFunction(token.LBrace, p.parseStructExpression)
+	p.registerBinExprFunction(token.Dot, p.parseStructFieldCall)
 
 	return p, nil
 }
@@ -673,6 +675,24 @@ func (p *Parser) parseStructExpression(
 		}
 	}
 	node.Fields = fields
+
+	return node, nil
+}
+
+func (p *Parser) parseStructFieldCall(expr ast.IExpression, terminatedTokens []token.TokenType) (ast.IExpression, error) {
+	node := &ast.StructFieldCall{
+		Token:      p.currToken,
+		StructExpr: expr,
+	}
+	if err := p.read(); err != nil {
+		return nil, err
+	}
+	field, err := p.parseIdentifier()
+	if err != nil {
+		return nil, err
+	}
+
+	node.Field = field
 
 	return node, nil
 }
