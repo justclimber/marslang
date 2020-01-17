@@ -274,15 +274,15 @@ func ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (obje
 		return nil, err
 	}
 
-	if index.Type() != object.IntegerObj {
-		return nil, runtimeError(node, "Array access can be only by 'int' type but '%s' given", index.Type())
-	}
-	if left.Type() != object.ArrayObj {
+	arrayObj, ok := left.(*object.Array)
+	if !ok {
 		return nil, runtimeError(node, "Array access can be only on arrays but '%s' given", left.Type())
 	}
 
-	arrayObj, _ := left.(*object.Array)
-	indexObj, _ := index.(*object.Integer)
+	indexObj, ok := index.(*object.Integer)
+	if !ok {
+		return nil, runtimeError(node, "Array access can be only by 'int' type but '%s' given", index.Type())
+	}
 
 	i := indexObj.Value
 	if i < 0 || int(i) > len(arrayObj.Elements)-1 {
@@ -349,7 +349,8 @@ func ExecStructFieldCall(node *ast.StructFieldCall, env *object.Environment) (ob
 
 	fieldObj, ok := structObj.Fields[node.Field.Value]
 	if !ok {
-		return nil, runtimeError(node, "Struct '%s' doesn't have field '%s'", structObj.Definition.Name, node.Field.Value)
+		return nil, runtimeError(node,
+			"Struct '%s' doesn't have field '%s'", structObj.Definition.Name, node.Field.Value)
 	}
 
 	return fieldObj, nil

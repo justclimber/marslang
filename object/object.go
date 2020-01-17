@@ -65,7 +65,10 @@ type Array struct {
 	Elements     []Object
 }
 
-func (a *Array) Type() ObjectType { return ArrayObj }
+func (a *Array) Type() ObjectType {
+	varType := fmt.Sprintf("%s[]", a.ElementsType)
+	return ObjectType(varType)
+}
 func (a *Array) Inspect() string {
 	var out bytes.Buffer
 
