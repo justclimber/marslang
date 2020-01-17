@@ -48,6 +48,7 @@ type Parser struct {
 
 	currToken token.Token
 	nextToken token.Token
+	prevToken token.Token
 
 	unaryExprFunctions map[token.TokenType]unaryExprFunction
 	binExprFunctions   map[token.TokenType]binExprFunctions
@@ -98,12 +99,21 @@ func New(l *lexer.Lexer) (*Parser, error) {
 
 func (p *Parser) read() error {
 	var err error
+	p.prevToken = p.currToken
 	p.currToken = p.nextToken
 	p.nextToken, err = p.l.NextToken()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (p *Parser) back() {
+	p.l.BackToToken(p.prevToken)
+	p.nextToken = p.currToken
+	p.currToken = p.prevToken
+	_ = p.read()
+	_ = p.read()
 }
 
 func (p *Parser) Parse() (*ast.StatementsBlock, error) {
@@ -234,7 +244,7 @@ func (p *Parser) parseExpression(precedence int, terminatedTokens []token.TokenT
 	for !p.nextTokenIn(terminatedTokens) && precedence < nextPrecedence {
 		binExprFunction := p.binExprFunctions[p.nextToken.Type]
 		if binExprFunction == nil {
-			err := p.parseError("Unexpected token for binary expression '%s'", p.nextToken.Type)
+			err := p.parseError("Unexpected next token for binary expression '%s'", p.nextToken.Type)
 			return nil, err
 		}
 
@@ -537,7 +547,8 @@ func (p *Parser) parseExpressions(closeTokens []token.TokenType) ([]ast.IExpress
 		return expressions, nil
 	}
 
-	expression, err := p.parseExpression(Lowest, token.GetTokenTypes(token.Comma))
+	// todo можно сделать в одном цикле
+	expression, err := p.parseExpression(Lowest, closeTokens)
 	if err != nil {
 		return nil, err
 	}
@@ -550,7 +561,7 @@ func (p *Parser) parseExpressions(closeTokens []token.TokenType) ([]ast.IExpress
 		if err = p.read(); err != nil {
 			return nil, err
 		}
-		expression, err = p.parseExpression(Lowest, token.GetTokenTypes(token.Comma))
+		expression, err = p.parseExpression(Lowest, closeTokens)
 		if err != nil {
 			return nil, err
 		}
@@ -610,7 +621,7 @@ func (p *Parser) parseArray() (ast.IExpression, error) {
 		if err = p.read(); err != nil {
 			return nil, err
 		}
-		elementExpressions, err = p.parseExpressions(token.GetTokenTypes(token.RBrace))
+		elementExpressions, err = p.parseExpressions([]token.TokenType{token.Comma, token.RBrace})
 		if err != nil {
 			return nil, err
 		}
@@ -622,6 +633,10 @@ func (p *Parser) parseArray() (ast.IExpression, error) {
 }
 
 func (p *Parser) parseArrayIndexCall(array ast.IExpression, terminatedTokens []token.TokenType) (ast.IExpression, error) {
+	if p.nextToken.Type == token.RBracket {
+		p.back()
+		return p.parseArray()
+	}
 	node := &ast.ArrayIndexCall{
 		Token: p.currToken,
 		Left:  array,
@@ -776,5 +791,5 @@ func (p *Parser) registerBinExprFunction(tokenType token.TokenType, fn binExprFu
 
 func (p *Parser) parseError(format string, args ...interface{}) error {
 	msg := fmt.Sprintf(format, args...)
-	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, p.currToken.Line, p.currToken.Pos))
+	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, p.currToken.Line, p.currToken.Col))
 }

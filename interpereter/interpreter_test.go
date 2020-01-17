@@ -198,6 +198,51 @@ b = a[2]
 	require.Equal(t, 3.3, varBFloat.Value)
 }
 
+func TestArrayOfStruct(t *testing.T) {
+	input := `struct point {
+   float x
+   float y
+}
+a = point[]{point{x = 1., y = 2.}, point{x = 2., y = 3.}}
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Array{}, varA)
+
+	varAArray, _ := varA.(*object.Array)
+	require.Len(t, varAArray.Elements, 2)
+	require.Equal(t, "point", varAArray.ElementsType)
+	require.Equal(t, "point[]", string(varAArray.Type()))
+	require.IsType(t, &object.Struct{}, varAArray.Elements[0])
+
+	el0, ok := varAArray.Elements[0].(*object.Struct)
+	require.True(t, ok)
+	require.Equal(t, "point", el0.Definition.Name)
+
+	x, ok := el0.Fields["x"]
+	require.True(t, ok)
+	require.IsType(t, &object.Float{}, x)
+
+	xFloat, _ := x.(*object.Float)
+	require.Equal(t, 1., xFloat.Value)
+
+	require.IsType(t, &object.Struct{}, varAArray.Elements[1])
+
+	el1, ok := varAArray.Elements[1].(*object.Struct)
+	require.True(t, ok)
+	require.Equal(t, "point", el1.Definition.Name)
+
+	y, ok := el1.Fields["y"]
+	require.True(t, ok)
+	require.IsType(t, &object.Float{}, y)
+
+	yFloat, _ := y.(*object.Float)
+	require.Equal(t, 3., yFloat.Value)
+}
+
 func TestRegisterStructDefinition(t *testing.T) {
 	input := `struct point {
    float x

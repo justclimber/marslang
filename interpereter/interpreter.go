@@ -430,5 +430,5 @@ func transferArgsToNewEnv(fn *object.Function, args []object.Object) *object.Env
 func runtimeError(node ast.Node, format string, args ...interface{}) error {
 	msg := fmt.Sprintf(format, args...)
 	t := node.GetToken()
-	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, t.Line, t.Pos))
+	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, t.Line, t.Col))
 }

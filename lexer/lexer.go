@@ -19,11 +19,19 @@ type Lexer struct {
 func New(input string) *Lexer {
 	l := &Lexer{input: []rune(input)}
 
+	l.fetch(1, 1)
+	return l
+}
+
+func (l *Lexer) fetch(line, pos int) {
 	l.currChar = l.input[l.currPosition]
 	l.nextChar = l.input[l.currPosition+1]
-	l.line = 1
-	l.pos = 1
-	return l
+	l.line = line
+	l.pos = pos
+}
+
+func (l *Lexer) GetCurrentPosition() int {
+	return l.currPosition
 }
 
 func (l *Lexer) read() {
@@ -43,12 +51,18 @@ func (l *Lexer) read() {
 	}
 }
 
+func (l *Lexer) BackToToken(t token.Token) {
+	l.currPosition = t.Pos
+	l.fetch(t.Line, t.Col)
+}
+
 func (l *Lexer) NextToken() (token.Token, error) {
 	var currToken token.Token
 	l.skipWhitespace()
 
 	currToken.Line = l.line
-	currToken.Pos = l.pos
+	currToken.Col = l.pos
+	currToken.Pos = l.currPosition
 
 	simpleTokens := []string{
 		token.Comma,

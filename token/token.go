@@ -60,6 +60,7 @@ type Token struct {
 	Type  TokenType
 	Value string
 	Line  int
+	Col   int
 	Pos   int
 }
 

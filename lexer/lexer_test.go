@@ -187,17 +187,17 @@ func TestGetCurrLineAndPos(t *testing.T) {
 asd`
 	l := New(input)
 	assert.Equal(t, 1, l.line, "Line should be 1 on start")
-	assert.Equal(t, 1, l.pos, "Pos should be 1 on start")
+	assert.Equal(t, 1, l.pos, "Col should be 1 on start")
 
 	l.read()
 	assert.Equal(t, 1, l.line, "Line should be 1")
-	assert.Equal(t, 2, l.pos, "Pos should be 2")
+	assert.Equal(t, 2, l.pos, "Col should be 2")
 
 	for i := 0; i <= 8; i++ {
 		l.read()
 	}
 	assert.Equal(t, 2, l.line, "Line should be 2")
-	assert.Equal(t, 1, l.pos, "Pos should be 1")
+	assert.Equal(t, 1, l.pos, "Col should be 1")
 }
 
 func TestLineAndPosForTokens(t *testing.T) {
@@ -209,18 +209,18 @@ func TestLineAndPosForTokens(t *testing.T) {
 	_, _ = l.NextToken()
 	tok, _ := l.NextToken()
 	assert.Equal(t, 1, tok.Line)
-	assert.Equal(t, 5, tok.Pos)
+	assert.Equal(t, 5, tok.Col)
 
 	_, _ = l.NextToken()
 	_, _ = l.NextToken()
 	_, _ = l.NextToken()
 	tok, _ = l.NextToken()
 	assert.Equal(t, 1, tok.Line)
-	assert.Equal(t, 11, tok.Pos)
+	assert.Equal(t, 11, tok.Col)
 
 	tok, _ = l.NextToken()
 	assert.Equal(t, 2, tok.Line)
-	assert.Equal(t, 4, tok.Pos)
+	assert.Equal(t, 4, tok.Col)
 }
 
 func testLexerInput(input string, tests []expectedTestToken, t *testing.T) {
