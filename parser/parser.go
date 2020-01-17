@@ -442,7 +442,7 @@ func (p *Parser) parseFunction() (ast.IExpression, error) {
 	if err != nil {
 		return nil, err
 	}
-	typeToken, err := p.getExpectedToken(token.Type)
+	typeToken, err := p.getExpectedTokens([]token.TokenType{token.Type, token.Ident})
 	if err != nil {
 		return nil, err
 	}
@@ -480,7 +480,7 @@ func (p *Parser) parseVarAndTypes(endToken token.TokenType, delimiterToken token
 	var err error
 	vars := make([]*ast.VarAndType, 0)
 
-	for p.currToken.Type == token.Type {
+	for p.currTokenIn([]token.TokenType{token.Type, token.Ident}) {
 		argument := &ast.VarAndType{
 			Token:   p.currToken,
 			VarType: p.currToken.Value,
