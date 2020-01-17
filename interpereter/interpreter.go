@@ -47,6 +47,14 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		result, err = ExecArray(node, env)
 	case *ast.ArrayIndexCall:
 		result, err = ExecArrayIndexCall(node, env)
+	case *ast.StructDefinition:
+		err = RegisterStructDefinition(node, env)
+	case *ast.Struct:
+		result, err = ExecStruct(node, env)
+	case *ast.StructFieldCall:
+		result, err = ExecStructFieldCall(node, env)
+	default:
+		err = runtimeError(node, "Unknown ast node to execute: %T", node)
 	}
 	if err != nil {
 		return nil, err
@@ -266,15 +274,15 @@ func ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (obje
 		return nil, err
 	}
 
-	if index.Type() != object.IntegerObj {
-		return nil, runtimeError(node, "Array access can be only by 'int' type but '%s' given", index.Type())
-	}
-	if left.Type() != object.ArrayObj {
+	arrayObj, ok := left.(*object.Array)
+	if !ok {
 		return nil, runtimeError(node, "Array access can be only on arrays but '%s' given", left.Type())
 	}
 
-	arrayObj, _ := left.(*object.Array)
-	indexObj, _ := index.(*object.Integer)
+	indexObj, ok := index.(*object.Integer)
+	if !ok {
+		return nil, runtimeError(node, "Array access can be only by 'int' type but '%s' given", index.Type())
+	}
 
 	i := indexObj.Value
 	if i < 0 || int(i) > len(arrayObj.Elements)-1 {
@@ -282,6 +290,87 @@ func ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (obje
 	}
 
 	return arrayObj.Elements[i], nil
+}
+
+func RegisterStructDefinition(node *ast.StructDefinition, env *object.Environment) error {
+	s := &object.StructDefinition{
+		Name:   node.Name,
+		Fields: node.Fields,
+	}
+	if err := env.RegisterStructDefinition(s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ExecStruct(node *ast.Struct, env *object.Environment) (object.Object, error) {
+	definition, ok := env.GetStructDefinition(node.Ident.Value)
+	if !ok {
+		return nil, runtimeError(node, "Struct '%s' is not defined", node.Ident.Value)
+	}
+	fields := make(map[string]object.Object)
+	for _, n := range node.Fields {
+		result, err := Exec(n.Value, env)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = structTypeAndVarsChecks(n, definition, result); err != nil {
+			return nil, err
+		}
+
+		fields[n.Name.Value] = result
+	}
+	if len(fields) != len(definition.Fields) {
+		return nil, runtimeError(node,
+			"Var of struct '%s' should have %d fields filled but in fact only %d",
+			definition.Name,
+			len(definition.Fields),
+			len(fields))
+	}
+	obj := &object.Struct{
+		Definition: definition,
+		Fields:     fields,
+	}
+
+	return obj, nil
+}
+
+func ExecStructFieldCall(node *ast.StructFieldCall, env *object.Environment) (object.Object, error) {
+	left, err := Exec(node.StructExpr, env)
+	if err != nil {
+		return nil, err
+	}
+
+	structObj, ok := left.(*object.Struct)
+	if !ok {
+		return nil, runtimeError(node, "Field access can be only on struct but '%s' given", left.Type())
+	}
+
+	fieldObj, ok := structObj.Fields[node.Field.Value]
+	if !ok {
+		return nil, runtimeError(node,
+			"Struct '%s' doesn't have field '%s'", structObj.Definition.Name, node.Field.Value)
+	}
+
+	return fieldObj, nil
+}
+
+func structTypeAndVarsChecks(n *ast.Assignment, definition *object.StructDefinition, result object.Object) error {
+	fieldFromDefinition, ok := definition.Fields[n.Name.Value]
+	if !ok {
+		return runtimeError(
+			n, "Struct '%s' doesn't have the field '%s' in the definition", definition.Name, n.Name.Value)
+	}
+	if fieldFromDefinition.VarType != string(result.Type()) {
+		return runtimeError(
+			n,
+			"Field '%s' defined as '%s' but '%s' given",
+			n.Name.Value,
+			fieldFromDefinition.VarType,
+			result.Type())
+	}
+	return nil
 }
 
 func arrayElementsTypeCheck(node *ast.Array, t string, es []object.Object) error {
@@ -310,17 +399,17 @@ func functionReturnTypeCheck(node *ast.FunctionCall, result object.Object, funct
 	return nil
 }
 
-func functionCallArgumentsCheck(node *ast.FunctionCall, declaredArgs []*ast.FunctionArg, actualArgValues []object.Object) error {
+func functionCallArgumentsCheck(node *ast.FunctionCall, declaredArgs []*ast.VarAndType, actualArgValues []object.Object) error {
 	if len(declaredArgs) != len(actualArgValues) {
-		return runtimeError(node, "Function call arguments count micmatch: dectlared %d, but called %d",
+		return runtimeError(node, "Function call arguments count mismatch: declared %d, but called %d",
 			len(declaredArgs), len(actualArgValues))
 	}
 
 	if len(actualArgValues) > 0 {
 		for i, arg := range declaredArgs {
-			if actualArgValues[i].Type() != object.ObjectType(arg.ArgType) {
+			if actualArgValues[i].Type() != object.ObjectType(arg.VarType) {
 				return runtimeError(arg, "argument #%d type mismatch: expected '%s' by func declaration but called '%s'",
-					i+1, arg.ArgType, actualArgValues[i].Type())
+					i+1, arg.VarType, actualArgValues[i].Type())
 			}
 		}
 	}
@@ -332,7 +421,7 @@ func transferArgsToNewEnv(fn *object.Function, args []object.Object) *object.Env
 	env := object.NewEnclosedEnvironment(fn.Env)
 
 	for i, arg := range fn.Arguments {
-		env.Set(arg.Arg.Value, args[i])
+		env.Set(arg.Var.Value, args[i])
 	}
 
 	return env
@@ -341,5 +430,5 @@ func transferArgsToNewEnv(fn *object.Function, args []object.Object) *object.Env
 func runtimeError(node ast.Node, format string, args ...interface{}) error {
 	msg := fmt.Sprintf(format, args...)
 	t := node.GetToken()
-	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, t.Line, t.Pos))
+	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, t.Line, t.Col))
 }

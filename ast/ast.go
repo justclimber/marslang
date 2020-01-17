@@ -22,7 +22,7 @@ type StatementsBlock struct {
 
 type Assignment struct {
 	Token token.Token
-	Name  Identifier
+	Name  *Identifier
 	Value IExpression
 }
 
@@ -78,15 +78,15 @@ type Return struct {
 
 type Function struct {
 	Token           token.Token
-	Arguments       []*FunctionArg
+	Arguments       []*VarAndType
 	ReturnType      string
 	StatementsBlock *StatementsBlock
 }
 
-type FunctionArg struct {
+type VarAndType struct {
 	Token   token.Token
-	ArgType string
-	Arg     *Identifier
+	VarType string
+	Var     *Identifier
 }
 
 type FunctionCall struct {
@@ -102,20 +102,41 @@ type IfStatement struct {
 	ElseBranch     *StatementsBlock
 }
 
-func (node *Assignment) GetToken() token.Token      { return node.Token }
-func (node *UnaryExpression) GetToken() token.Token { return node.Token }
-func (node *BinExpression) GetToken() token.Token   { return node.Token }
-func (node *Identifier) GetToken() token.Token      { return node.Token }
-func (node *NumInt) GetToken() token.Token          { return node.Token }
-func (node *NumFloat) GetToken() token.Token        { return node.Token }
-func (node *Array) GetToken() token.Token           { return node.Token }
-func (node *ArrayIndexCall) GetToken() token.Token  { return node.Token }
-func (node *Boolean) GetToken() token.Token         { return node.Token }
-func (node *Return) GetToken() token.Token          { return node.Token }
-func (node *Function) GetToken() token.Token        { return node.Token }
-func (node *FunctionArg) GetToken() token.Token     { return node.Token }
-func (node *FunctionCall) GetToken() token.Token    { return node.Token }
-func (node *IfStatement) GetToken() token.Token     { return node.Token }
+type StructDefinition struct {
+	Token  token.Token
+	Name   string
+	Fields map[string]*VarAndType
+}
+
+type Struct struct {
+	Token  token.Token
+	Ident  *Identifier
+	Fields []*Assignment
+}
+
+type StructFieldCall struct {
+	Token      token.Token
+	StructExpr IExpression
+	Field      *Identifier
+}
+
+func (node *Assignment) GetToken() token.Token       { return node.Token }
+func (node *UnaryExpression) GetToken() token.Token  { return node.Token }
+func (node *BinExpression) GetToken() token.Token    { return node.Token }
+func (node *Identifier) GetToken() token.Token       { return node.Token }
+func (node *NumInt) GetToken() token.Token           { return node.Token }
+func (node *NumFloat) GetToken() token.Token         { return node.Token }
+func (node *Array) GetToken() token.Token            { return node.Token }
+func (node *ArrayIndexCall) GetToken() token.Token   { return node.Token }
+func (node *Boolean) GetToken() token.Token          { return node.Token }
+func (node *Return) GetToken() token.Token           { return node.Token }
+func (node *Function) GetToken() token.Token         { return node.Token }
+func (node *VarAndType) GetToken() token.Token       { return node.Token }
+func (node *FunctionCall) GetToken() token.Token     { return node.Token }
+func (node *IfStatement) GetToken() token.Token      { return node.Token }
+func (node *StructDefinition) GetToken() token.Token { return node.Token }
+func (node *Struct) GetToken() token.Token           { return node.Token }
+func (node *StructFieldCall) GetToken() token.Token  { return node.Token }
 func (node *StatementsBlock) GetToken() token.Token {
 	if len(node.Statements) > 0 {
 		return node.Statements[0].GetToken()

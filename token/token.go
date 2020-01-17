@@ -1,11 +1,20 @@
 package token
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
+	None = ""
+
 	EOL = "EOL"
 	EOF = "EOF"
 
 	Assignment = "="
 	Comma      = ","
+	Dot        = "."
+	Colon      = ":"
 
 	// arithmetical operators
 	Plus     = "+"
@@ -30,9 +39,10 @@ const (
 	LBracket = "["
 	RBracket = "]"
 
-	Var = "var"
+	Ident = "ident"
 
 	// keywords
+	Struct   = "struct"
 	Function = "fn"
 	Return   = "return"
 	True     = "true"
@@ -50,6 +60,7 @@ type Token struct {
 	Type  TokenType
 	Value string
 	Line  int
+	Col   int
 	Pos   int
 }
 
@@ -63,6 +74,7 @@ var keywords = map[string]TokenType{
 	"false":  False,
 	"if":     If,
 	"else":   Else,
+	"struct": Struct,
 }
 
 func LookupIdent(ident string) TokenType {
@@ -70,5 +82,17 @@ func LookupIdent(ident string) TokenType {
 		return keywordToken
 	}
 
-	return Var
+	return Ident
+}
+
+func GetTokenTypes(tokens TokenType) []TokenType {
+	return []TokenType{tokens}
+}
+
+func GetTokensString(tokens []TokenType) string {
+	var s []string
+	for _, t := range tokens {
+		s = append(s, fmt.Sprintf("'%s'", t))
+	}
+	return strings.Join(s, ", ")
 }

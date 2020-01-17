@@ -2,6 +2,7 @@ package object
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -12,13 +13,16 @@ func NewEnclosedEnvironment(outer *Environment) *Environment {
 }
 
 func NewEnvironment() *Environment {
-	s := make(map[string]Object)
-	return &Environment{store: s, outer: nil}
+	return &Environment{
+		store:             make(map[string]Object),
+		structDefinitions: make(map[string]*StructDefinition),
+	}
 }
 
 type Environment struct {
-	store map[string]Object
-	outer *Environment
+	store             map[string]Object
+	structDefinitions map[string]*StructDefinition
+	outer             *Environment
 }
 
 func (e *Environment) Get(name string) (Object, bool) {
@@ -34,6 +38,25 @@ func (e *Environment) Get(name string) (Object, bool) {
 func (e *Environment) Set(name string, val Object) Object {
 	e.store[name] = val
 	return val
+}
+
+func (e *Environment) RegisterStructDefinition(s *StructDefinition) error {
+	if _, exists := e.structDefinitions[s.Name]; exists {
+		return errors.New(fmt.Sprintf("Struct '%s' already defined in this scope", s.Name))
+	}
+	e.structDefinitions[s.Name] = s
+
+	return nil
+}
+
+func (e *Environment) GetStructDefinition(name string) (*StructDefinition, bool) {
+	s, ok := e.structDefinitions[name]
+
+	if !ok && e.outer != nil {
+		s, ok = e.outer.GetStructDefinition(name)
+	}
+
+	return s, ok
 }
 
 func (e *Environment) Print() {

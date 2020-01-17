@@ -15,6 +15,7 @@ const (
 	BooleanObj     = "bool"
 	NullObj        = "null"
 	ArrayObj       = "array"
+	StructObj      = "struct"
 	ReturnValueObj = "return_value"
 	FunctionObj    = "function_obj"
 	BuiltinFnObj   = "builtin_fn_obj"
@@ -23,6 +24,11 @@ const (
 type Object interface {
 	Type() ObjectType
 	Inspect() string
+}
+
+type StructDefinition struct {
+	Name   string
+	Fields map[string]*ast.VarAndType
 }
 
 type IIdentifier interface{}
@@ -59,7 +65,10 @@ type Array struct {
 	Elements     []Object
 }
 
-func (a *Array) Type() ObjectType { return ArrayObj }
+func (a *Array) Type() ObjectType {
+	varType := fmt.Sprintf("%s[]", a.ElementsType)
+	return ObjectType(varType)
+}
 func (a *Array) Inspect() string {
 	var out bytes.Buffer
 
@@ -84,7 +93,7 @@ func (rv *ReturnValue) Type() ObjectType { return ReturnValueObj }
 func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
 
 type Function struct {
-	Arguments  []*ast.FunctionArg
+	Arguments  []*ast.VarAndType
 	Statements *ast.StatementsBlock
 	ReturnType string
 	Env        *Environment
@@ -93,6 +102,16 @@ type Function struct {
 func (f *Function) Type() ObjectType { return FunctionObj }
 func (f *Function) Inspect() string {
 	return "function"
+}
+
+type Struct struct {
+	Definition *StructDefinition
+	Fields     map[string]Object
+}
+
+func (s *Struct) Type() ObjectType { return ObjectType(s.Definition.Name) }
+func (s *Struct) Inspect() string {
+	return fmt.Sprintf("struct %s", s.Definition.Name)
 }
 
 type BuiltinFunction func(args ...Object) Object
