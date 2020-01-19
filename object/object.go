@@ -28,7 +28,15 @@ type Object interface {
 
 type StructDefinition struct {
 	Name   string
-	Fields map[string]*ast.VarAndType
+	Fields map[string]string
+}
+
+func CreateVarDefinitionsFromVarType(varTypes map[string]*ast.VarAndType) map[string]string {
+	varDefinitions := make(map[string]string)
+	for k, v := range varTypes {
+		varDefinitions[k] = v.VarType
+	}
+	return varDefinitions
 }
 
 type IIdentifier interface{}

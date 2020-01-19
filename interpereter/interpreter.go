@@ -295,7 +295,7 @@ func ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (obje
 func RegisterStructDefinition(node *ast.StructDefinition, env *object.Environment) error {
 	s := &object.StructDefinition{
 		Name:   node.Name,
-		Fields: node.Fields,
+		Fields: object.CreateVarDefinitionsFromVarType(node.Fields),
 	}
 	if err := env.RegisterStructDefinition(s); err != nil {
 		return err
@@ -357,17 +357,17 @@ func ExecStructFieldCall(node *ast.StructFieldCall, env *object.Environment) (ob
 }
 
 func structTypeAndVarsChecks(n *ast.Assignment, definition *object.StructDefinition, result object.Object) error {
-	fieldFromDefinition, ok := definition.Fields[n.Name.Value]
+	fieldType, ok := definition.Fields[n.Name.Value]
 	if !ok {
 		return runtimeError(
 			n, "Struct '%s' doesn't have the field '%s' in the definition", definition.Name, n.Name.Value)
 	}
-	if fieldFromDefinition.VarType != string(result.Type()) {
+	if fieldType != string(result.Type()) {
 		return runtimeError(
 			n,
 			"Field '%s' defined as '%s' but '%s' given",
 			n.Name.Value,
-			fieldFromDefinition.VarType,
+			fieldType,
 			result.Type())
 	}
 	return nil

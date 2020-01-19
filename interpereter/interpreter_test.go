@@ -253,10 +253,10 @@ func TestRegisterStructDefinition(t *testing.T) {
 	s, ok := env.GetStructDefinition("point")
 	require.True(t, ok)
 	require.Len(t, s.Fields, 2)
-	assert.Equal(t, "float", s.Fields["x"].VarType)
-	assert.Equal(t, "x", s.Fields["x"].Var.Value)
-	assert.Equal(t, "float", s.Fields["y"].VarType)
-	assert.Equal(t, "y", s.Fields["y"].Var.Value)
+	assert.NotNil(t, "x", s.Fields["x"])
+	assert.NotNil(t, "y", s.Fields["y"])
+	assert.Equal(t, "float", s.Fields["x"])
+	assert.Equal(t, "float", s.Fields["y"])
 }
 
 func TestRegisterStructNestedDefinition(t *testing.T) {
@@ -272,10 +272,10 @@ struct mech {
 	s, ok := env.GetStructDefinition("point")
 	require.True(t, ok)
 	require.Len(t, s.Fields, 2)
-	assert.Equal(t, "float", s.Fields["x"].VarType)
-	assert.Equal(t, "x", s.Fields["x"].Var.Value)
-	assert.Equal(t, "float", s.Fields["y"].VarType)
-	assert.Equal(t, "y", s.Fields["y"].Var.Value)
+	assert.NotNil(t, "x", s.Fields["x"])
+	assert.NotNil(t, "y", s.Fields["y"])
+	assert.Equal(t, "float", s.Fields["x"])
+	assert.Equal(t, "float", s.Fields["y"])
 }
 
 func TestStruct(t *testing.T) {
