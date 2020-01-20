@@ -418,3 +418,47 @@ func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
 	require.Nil(t, err)
 	return env
 }
+
+func BenchmarkExecFull(b *testing.B) {
+	input := `a = int[]{1, 2.1, 3}
+b = a[1]
+`
+	for i := 0; i < b.N; i++ {
+		l := lexer.New(input)
+		p, _ := parser.New(l)
+		env := object.NewEnvironment()
+		astProgram, _ := p.Parse()
+		_, _ = Exec(astProgram, env)
+	}
+}
+func BenchmarkExecOnlyAst(b *testing.B) {
+	input := `sum = fn(int x, int y) int {
+   return x + y
+}
+a = sum(2, 5)
+c = 10
+if c > 8 {
+    bb = 1
+} else {
+    bb = 2
+}
+struct point {
+   float x
+   float y
+}
+struct mech {
+   point p
+}
+m = mech{p = point{x = 1., y = 2.}}
+
+px = m.p.x
+`
+	l := lexer.New(input)
+	p, _ := parser.New(l)
+	env := object.NewEnvironment()
+	astProgram, _ := p.Parse()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = Exec(astProgram, env)
+	}
+}
