@@ -136,8 +136,7 @@ func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.
 		if stmt != nil {
 			statements = append(statements, stmt)
 		}
-		err = p.read()
-		if err != nil {
+		if err = p.read(); err != nil {
 			return nil, err
 		}
 	}
@@ -360,6 +359,10 @@ func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 	}
 
 	if err := p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
+		return nil, err
+	}
+
+	if err = p.read(); err != nil {
 		return nil, err
 	}
 
