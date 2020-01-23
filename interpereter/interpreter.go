@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	ReservedObjNull  = &object.Null{}
 	ReservedObjTrue  = &object.Boolean{Value: true}
 	ReservedObjFalse = &object.Boolean{Value: false}
 )

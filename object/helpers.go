@@ -1,6 +1,8 @@
 package object
 
-import "log"
+import (
+	"log"
+)
 
 func (e *Environment) CreateAndInjectStruct(definitionName, varName string, s map[string]interface{}) {
 	f := make(map[string]string)
@@ -20,6 +22,41 @@ func (e *Environment) CreateAndInjectStruct(definitionName, varName string, s ma
 	e.Set(varName, &Struct{
 		Definition: structDefinition,
 		Fields:     fields,
+	})
+}
+
+type AbstractStruct struct {
+	Fields map[string]interface{}
+}
+
+func (e *Environment) CreateAndInjectArrayOfStructs(definitionName, varName string, sa []AbstractStruct) {
+	if len(sa) == 0 {
+		return
+	}
+	f := make(map[string]string)
+	for k, v := range sa[0].Fields {
+		f[k] = getLangType(v)
+	}
+	structDefinition := &StructDefinition{
+		Name:   definitionName,
+		Fields: f,
+	}
+
+	els := make([]Object, 0, len(sa))
+
+	for _, s := range sa {
+		fields := make(map[string]Object)
+		for k, v := range s.Fields {
+			fields[k] = getLangObject(v)
+		}
+		els = append(els, &Struct{
+			Definition: structDefinition,
+			Fields:     fields,
+		})
+	}
+	e.Set(varName, &Array{
+		ElementsType: definitionName,
+		Elements:     els,
 	})
 }
 

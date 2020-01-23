@@ -13,9 +13,6 @@ const (
 	IntegerObj     = "int"
 	FloatObj       = "float"
 	BooleanObj     = "bool"
-	NullObj        = "null"
-	ArrayObj       = "array"
-	StructObj      = "struct"
 	ReturnValueObj = "return_value"
 	FunctionObj    = "function_obj"
 	BuiltinFnObj   = "builtin_fn_obj"
@@ -54,7 +51,7 @@ type Float struct {
 }
 
 func (f *Float) Type() ObjectType { return FloatObj }
-func (f *Float) Inspect() string  { return fmt.Sprintf("%f", f.Value) }
+func (f *Float) Inspect() string  { return fmt.Sprintf("%.1f", f.Value) }
 
 type Boolean struct {
 	Value bool
@@ -62,11 +59,6 @@ type Boolean struct {
 
 func (b *Boolean) Type() ObjectType { return BooleanObj }
 func (b *Boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
-
-type Null struct{}
-
-func (n *Null) Type() ObjectType { return NullObj }
-func (n *Null) Inspect() string  { return "null" }
 
 type Array struct {
 	ElementsType string
@@ -86,9 +78,9 @@ func (a *Array) Inspect() string {
 	}
 
 	out.WriteString(a.ElementsType)
-	out.WriteString("[")
+	out.WriteString("[]{")
 	out.WriteString(strings.Join(elements, ", "))
-	out.WriteString("]")
+	out.WriteString("}")
 
 	return out.String()
 }
@@ -119,7 +111,19 @@ type Struct struct {
 
 func (s *Struct) Type() ObjectType { return ObjectType(s.Definition.Name) }
 func (s *Struct) Inspect() string {
-	return fmt.Sprintf("struct %s", s.Definition.Name)
+	var out bytes.Buffer
+
+	var elements []string
+	for k, v := range s.Fields {
+		elements = append(elements, fmt.Sprintf("%s: %s", k, v.Inspect()))
+	}
+
+	out.WriteString(s.Definition.Name)
+	out.WriteString("{")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("}")
+
+	return out.String()
 }
 
 type BuiltinFunction func(args ...Object) Object
