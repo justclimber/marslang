@@ -73,3 +73,11 @@ func (e *Environment) GetVarsAsJson() ([]byte, error) {
 	}
 	return json.Marshal(varMap)
 }
+
+func (e *Environment) ToStrings() []string {
+	result := make([]string, 0)
+	for k, v := range e.store {
+		result = append(result, fmt.Sprintf("%s: %s\n", k, v.Inspect()))
+	}
+	return result
+}
