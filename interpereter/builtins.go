@@ -30,7 +30,7 @@ var Builtins = map[string]*object.Builtin{
 			y1 := args[1].(*object.Float).Value
 			x2 := args[2].(*object.Float).Value
 			y2 := args[3].(*object.Float).Value
-			return &object.Float{Value: distance(x1, x2, y1, y2)}, nil
+			return &object.Float{Value: distance(x1, y1, x2, y2)}, nil
 		},
 		ReturnType: object.FloatObj,
 	},

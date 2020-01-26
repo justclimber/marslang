@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-func distance(x1, x2, y1, y2 float64) float64 {
+func distance(x1, y1, x2, y2 float64) float64 {
 	dx := x1 - x2
 	dy := y1 - y2
 	ds := (dx * dx) + (dy * dy)
