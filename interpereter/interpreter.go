@@ -198,15 +198,23 @@ func ExecFunctionCall(node *ast.FunctionCall, env *object.Environment) (object.O
 			return nil, err
 		}
 
-		err = functionReturnTypeCheck(node, result, fn.ReturnType)
-		if err != nil {
+		if err = functionReturnTypeCheck(node, result, fn.ReturnType); err != nil {
 			return nil, err
 		}
 
 		return result, nil
 
 	case *object.Builtin:
-		return fn.Fn(args...), nil
+		result, err := fn.Fn(args...)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = functionReturnTypeCheck(node, result, fn.ReturnType); err != nil {
+			return nil, err
+		}
+
+		return result, nil
 
 	default:
 		return nil, runtimeError(node, "not a function: %s", fn.Type())
