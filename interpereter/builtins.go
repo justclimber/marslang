@@ -50,6 +50,40 @@ var Builtins = map[string]*object.Builtin{
 		},
 		ReturnType: object.FloatObj,
 	},
+	"nearest": &object.Builtin{
+		Fn: func(args ...object.Object) (object.Object, error) {
+			if len(args) != 2 {
+				return nil, builtinFuncError("wrong number of arguments. got=%d, want 2", len(args))
+			}
+			if err := checkArgType("Mech", args[0]); err != nil {
+				return nil, err
+			}
+			if err := checkArgType("Object[]", args[1]); err != nil {
+				return nil, err
+			}
+			mech := args[0].(*object.Struct)
+			arrayOfStruct, _ := args[1].(*object.Array)
+			minDist := 99999999999.
+			minIndex := -1
+			for i := 0; i < len(arrayOfStruct.Elements); i++ {
+				obj, _ := arrayOfStruct.Elements[i].(*object.Struct)
+				objX := obj.Fields["x"].(*object.Float).Value
+				objY := obj.Fields["y"].(*object.Float).Value
+				mechX := mech.Fields["x"].(*object.Float).Value
+				mechY := mech.Fields["y"].(*object.Float).Value
+				dist := distance(mechX, mechY, objX, objY)
+				if dist < minDist {
+					minDist = dist
+					minIndex = i
+				}
+			}
+			if minIndex == -1 {
+				return nil, builtinFuncError("nearest on empty array")
+			}
+			return arrayOfStruct.Elements[minIndex], nil
+		},
+		ReturnType: "Object",
+	},
 }
 
 func checkArgType(reqType object.ObjectType, arg object.Object) error {
