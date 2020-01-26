@@ -39,7 +39,7 @@ var precedences = map[token.TokenType]int{
 }
 
 type (
-	unaryExprFunction func() (ast.IExpression, error)
+	unaryExprFunction func([]token.TokenType) (ast.IExpression, error)
 	binExprFunctions  func(ast.IExpression, []token.TokenType) (ast.IExpression, error)
 )
 
@@ -173,7 +173,7 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 }
 
 func (p *Parser) parseAssignment(terminatedTokens []token.TokenType) (*ast.Assignment, error) {
-	identStmt, err := p.parseIdentifier()
+	identStmt, err := p.parseIdentifier(terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +234,7 @@ func (p *Parser) parseExpression(precedence int, terminatedTokens []token.TokenT
 		return nil, err
 	}
 
-	leftExp, err := unaryFunction()
+	leftExp, err := unaryFunction(terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
@@ -252,6 +252,7 @@ func (p *Parser) parseExpression(precedence int, terminatedTokens []token.TokenT
 			return nil, err
 		}
 		leftExp, err = binExprFunction(leftExp, terminatedTokens)
+
 		if err != nil {
 			return nil, err
 		}
@@ -259,7 +260,7 @@ func (p *Parser) parseExpression(precedence int, terminatedTokens []token.TokenT
 	return leftExp, nil
 }
 
-func (p *Parser) parseIdentifierAsExpression() (ast.IExpression, error) {
+func (p *Parser) parseIdentifierAsExpression(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	_, err := p.getExpectedToken(token.Ident)
 	if err != nil {
 		return nil, err
@@ -270,8 +271,8 @@ func (p *Parser) parseIdentifierAsExpression() (ast.IExpression, error) {
 	}, nil
 }
 
-func (p *Parser) parseIdentifier() (*ast.Identifier, error) {
-	expr, err := p.parseIdentifierAsExpression()
+func (p *Parser) parseIdentifier(terminatedTokens []token.TokenType) (*ast.Identifier, error) {
+	expr, err := p.parseIdentifierAsExpression(terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +280,7 @@ func (p *Parser) parseIdentifier() (*ast.Identifier, error) {
 	return ident, nil
 }
 
-func (p *Parser) parseInteger() (ast.IExpression, error) {
+func (p *Parser) parseInteger(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	node := &ast.NumInt{Token: p.currToken}
 
 	value, err := strconv.ParseInt(p.currToken.Value, 0, 64)
@@ -292,7 +293,7 @@ func (p *Parser) parseInteger() (ast.IExpression, error) {
 	return node, nil
 }
 
-func (p *Parser) parseUnaryExpression() (ast.IExpression, error) {
+func (p *Parser) parseUnaryExpression(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	node := &ast.UnaryExpression{
 		Token:    p.currToken,
 		Operator: p.currToken.Value,
@@ -301,7 +302,7 @@ func (p *Parser) parseUnaryExpression() (ast.IExpression, error) {
 	if err != nil {
 		return nil, err
 	}
-	expressionResult, err := p.parseExpression(Prefix, token.GetTokenTypes(token.None))
+	expressionResult, err := p.parseExpression(Prefix, terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +311,7 @@ func (p *Parser) parseUnaryExpression() (ast.IExpression, error) {
 	return node, err
 }
 
-func (p *Parser) parseReal() (ast.IExpression, error) {
+func (p *Parser) parseReal(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	node := &ast.NumFloat{Token: p.currToken}
 
 	value, err := strconv.ParseFloat(p.currToken.Value, 64)
@@ -384,7 +385,7 @@ func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 	statements, err = p.parseBlockOfStatements(token.RBrace)
 	stmt.ElseBranch = &ast.StatementsBlock{Statements: statements}
 
-	return stmt, nil
+	return stmt, err
 }
 
 func (p *Parser) parseStructDefinition() (ast.IExpression, error) {
@@ -425,7 +426,7 @@ func (p *Parser) parseStructDefinition() (ast.IExpression, error) {
 	return node, nil
 }
 
-func (p *Parser) parseFunction() (ast.IExpression, error) {
+func (p *Parser) parseFunction(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	function := &ast.Function{Token: p.currToken}
 
 	err := p.read()
@@ -503,7 +504,7 @@ func (p *Parser) parseVarAndTypes(endToken token.TokenType, delimiterToken token
 			return nil, err
 		}
 
-		argument.Var, err = p.parseIdentifier()
+		argument.Var, err = p.parseIdentifier(token.GetTokenTypes(delimiterToken))
 		if err != nil {
 			return nil, err
 		}
@@ -565,7 +566,7 @@ func (p *Parser) parseExpressions(closeTokens []token.TokenType) ([]ast.IExpress
 	return expressions, nil
 }
 
-func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {
+func (p *Parser) parseGroupedExpression(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	err := p.read()
 	if err != nil {
 		return nil, err
@@ -586,14 +587,14 @@ func (p *Parser) parseGroupedExpression() (ast.IExpression, error) {
 	return expression, nil
 }
 
-func (p *Parser) parseBoolean() (ast.IExpression, error) {
+func (p *Parser) parseBoolean(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	return &ast.Boolean{
 		Token: p.currToken,
 		Value: p.currToken.Type == token.True,
 	}, nil
 }
 
-func (p *Parser) parseArray() (ast.IExpression, error) {
+func (p *Parser) parseArray(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	node := &ast.Array{
 		Token:        p.currToken,
 		ElementsType: p.currToken.Value,
@@ -627,7 +628,7 @@ func (p *Parser) parseArray() (ast.IExpression, error) {
 func (p *Parser) parseArrayIndexCall(array ast.IExpression, terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	if p.nextToken.Type == token.RBracket {
 		p.back()
-		return p.parseArray()
+		return p.parseArray(terminatedTokens)
 	}
 	node := &ast.ArrayIndexCall{
 		Token: p.currToken,
@@ -694,7 +695,7 @@ func (p *Parser) parseStructFieldCall(expr ast.IExpression, terminatedTokens []t
 	if err := p.read(); err != nil {
 		return nil, err
 	}
-	field, err := p.parseIdentifier()
+	field, err := p.parseIdentifier(terminatedTokens)
 	if err != nil {
 		return nil, err
 	}

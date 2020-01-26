@@ -52,7 +52,7 @@ type Float struct {
 }
 
 func (f *Float) Type() ObjectType { return FloatObj }
-func (f *Float) Inspect() string  { return fmt.Sprintf("%.1f", f.Value) }
+func (f *Float) Inspect() string  { return fmt.Sprintf("%.2f", f.Value) }
 
 type Boolean struct {
 	Value bool

@@ -1,7 +1,6 @@
 package object
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -25,6 +24,9 @@ type Environment struct {
 	outer             *Environment
 }
 
+func (e *Environment) Store() map[string]Object {
+	return e.store
+}
 func (e *Environment) Get(name string) (Object, bool) {
 	obj, ok := e.store[name]
 
@@ -57,27 +59,4 @@ func (e *Environment) GetStructDefinition(name string) (*StructDefinition, bool)
 	}
 
 	return s, ok
-}
-
-func (e *Environment) Print() {
-	fmt.Println("Env content:")
-	for k, v := range e.store {
-		fmt.Printf("%s: %s\n", k, v.Inspect())
-	}
-}
-
-func (e *Environment) GetVarsAsJson() ([]byte, error) {
-	varMap := make(map[string]string)
-	for k, v := range e.store {
-		varMap[k] = v.Inspect()
-	}
-	return json.Marshal(varMap)
-}
-
-func (e *Environment) ToStrings() []string {
-	result := make([]string, 0)
-	for k, v := range e.store {
-		result = append(result, fmt.Sprintf("%s: %s\n", k, v.Inspect()))
-	}
-	return result
 }

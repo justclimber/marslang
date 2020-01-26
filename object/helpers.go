@@ -1,8 +1,44 @@
 package object
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 )
+
+func (e *Environment) Print() {
+	fmt.Println("Env content:")
+	for k, v := range e.store {
+		fmt.Printf("%s: %s\n", k, v.Inspect())
+	}
+}
+
+func (e *Environment) GetVarsAsJson() ([]byte, error) {
+	varMap := make(map[string]string)
+	for k, v := range e.store {
+		varMap[k] = v.Inspect()
+	}
+	return json.Marshal(varMap)
+}
+
+func (e *Environment) ToStrings() []string {
+	result := make([]string, 0)
+	for k, v := range e.store {
+		result = append(result, fmt.Sprintf("%s: %s\n", k, v.Inspect()))
+	}
+	return result
+}
+
+func (e *Environment) Keys() []string {
+	keys := make([]string, len(e.store))
+
+	i := 0
+	for k := range e.store {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
 
 func (e *Environment) CreateAndInjectStruct(definitionName, varName string, s map[string]interface{}) {
 	f := make(map[string]string)
