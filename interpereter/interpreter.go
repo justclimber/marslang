@@ -52,6 +52,8 @@ func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
 		result, err = ExecStruct(node, env)
 	case *ast.StructFieldCall:
 		result, err = ExecStructFieldCall(node, env)
+	case *ast.Switch:
+		result, err = ExecSwitch(node, env)
 	default:
 		err = runtimeError(node, "Unknown ast node to execute: %T", node)
 	}
@@ -361,6 +363,40 @@ func ExecStructFieldCall(node *ast.StructFieldCall, env *object.Environment) (ob
 	}
 
 	return fieldObj, nil
+}
+
+func ExecSwitch(node *ast.Switch, env *object.Environment) (object.Object, error) {
+	for _, c := range node.Cases {
+		condition, err := Exec(c.Condition, env)
+		if err != nil {
+			return nil, err
+		}
+		if condition.Type() != object.BooleanObj {
+			return nil, runtimeError(c.Condition,
+				"Result of case condition should be 'boolean' but '%s' given", condition.Type())
+		}
+		conditionResult, _ := condition.(*object.Boolean)
+		if conditionResult.Value {
+			result, err := ExecStatementsBlock(c.PositiveBranch, env)
+			if err != nil {
+				return nil, err
+			}
+			if result != nil && result.Type() == object.ReturnValueObj {
+				return result, nil
+			}
+			return &object.Void{}, nil
+		}
+	}
+	if node.DefaultBranch != nil {
+		result, err := ExecStatementsBlock(node.DefaultBranch, env)
+		if err != nil {
+			return nil, err
+		}
+		if result != nil && result.Type() == object.ReturnValueObj {
+			return result, nil
+		}
+	}
+	return &object.Void{}, nil
 }
 
 func structTypeAndVarsChecks(n *ast.Assignment, definition *object.StructDefinition, result object.Object) error {

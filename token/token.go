@@ -49,6 +49,9 @@ const (
 	False    = "false"
 	If       = "if"
 	Else     = "else"
+	Switch   = "switch"
+	Case     = "case"
+	Default  = "default"
 
 	// type hints
 	Type = "type"
@@ -65,16 +68,19 @@ type Token struct {
 }
 
 var keywords = map[string]TokenType{
-	"fn":     Function,
-	"return": Return,
-	"void":   Type,
-	"int":    Type,
-	"float":  Type,
-	"true":   True,
-	"false":  False,
-	"if":     If,
-	"else":   Else,
-	"struct": Struct,
+	"fn":      Function,
+	"return":  Return,
+	"void":    Type,
+	"int":     Type,
+	"float":   Type,
+	"true":    True,
+	"false":   False,
+	"if":      If,
+	"else":    Else,
+	"struct":  Struct,
+	"switch":  Switch,
+	"case":    Case,
+	"default": Default,
 }
 
 func LookupIdent(ident string) TokenType {

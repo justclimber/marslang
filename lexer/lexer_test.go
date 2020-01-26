@@ -182,6 +182,42 @@ px = p.x`
 	testLexerInput(input, tests, t)
 }
 
+func TestSwitchCase(t *testing.T) {
+	input := `switch {
+case a == 1:
+   r = 1
+default:
+   r = 2
+}`
+
+	tests := []expectedTestToken{
+		{token.Switch, "switch"},
+		{token.LBrace, "{"},
+		{token.EOL, ""},
+		{token.Case, "case"},
+		{token.Ident, "a"},
+		{token.Eq, "=="},
+		{token.NumInt, "1"},
+		{token.Colon, ":"},
+		{token.EOL, ""},
+		{token.Ident, "r"},
+		{token.Assignment, "="},
+		{token.NumInt, "1"},
+		{token.EOL, ""},
+		{token.Default, "default"},
+		{token.Colon, ":"},
+		{token.EOL, ""},
+		{token.Ident, "r"},
+		{token.Assignment, "="},
+		{token.NumInt, "2"},
+		{token.EOL, ""},
+		{token.RBrace, "}"},
+		{token.EOF, ""},
+	}
+
+	testLexerInput(input, tests, t)
+}
+
 func TestGetCurrLineAndPos(t *testing.T) {
 	input := `a = 5 + 6
 asd`

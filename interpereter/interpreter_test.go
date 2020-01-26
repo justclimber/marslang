@@ -407,6 +407,45 @@ b = a[1]
 	require.NotNil(t, err)
 }
 
+func TestExecSwitch(t *testing.T) {
+	input := `a = 10
+switch {
+case a > 20:
+   r = 1
+case a > 10:
+   r = 2
+case a == 0:
+   r = 3
+default:
+   r = 5
+}
+
+switch {
+case a < 20:
+   r1 = 1
+case a == 0:
+   r1 = 3
+default:
+   r1 = 5
+}
+`
+	env := testExecAngGetEnv(t, input)
+
+	varR, ok := env.Get("r")
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varR)
+
+	varRInt, ok := varR.(*object.Integer)
+	require.Equal(t, int64(5), varRInt.Value)
+
+	varR1, ok := env.Get("r1")
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varR1)
+
+	varR1Int, ok := varR1.(*object.Integer)
+	require.Equal(t, int64(1), varR1Int.Value)
+}
+
 func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
 	l := lexer.New(input)
 	p, err := parser.New(l)

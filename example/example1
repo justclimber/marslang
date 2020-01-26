@@ -18,3 +18,14 @@ struct mech {
 m = mech{p = point{x = 1., y = 2.}}
 
 px = m.p.x
+
+a = 10
+
+switch {
+case a < 20:
+   r1 = 1
+case a == 0:
+   r1 = 3
+default:
+   r1 = 5
+}

@@ -119,16 +119,16 @@ func (p *Parser) back() {
 func (p *Parser) Parse() (*ast.StatementsBlock, error) {
 	program := &ast.StatementsBlock{}
 
-	statements, err := p.parseBlockOfStatements(token.EOF)
+	statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.EOF))
 	program.Statements = statements
 
 	return program, err
 }
 
-func (p *Parser) parseBlockOfStatements(terminatedToken token.TokenType) ([]ast.IStatement, error) {
+func (p *Parser) parseBlockOfStatements(terminatedTokens []token.TokenType) ([]ast.IStatement, error) {
 	var statements []ast.IStatement
 
-	for p.currToken.Type != terminatedToken {
+	for !p.currTokenIn(terminatedTokens) {
 		stmt, err := p.parseStatement()
 		if err != nil {
 			return nil, err
@@ -165,6 +165,8 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 		return p.parseIfStatement()
 	case token.Struct:
 		return p.parseStructDefinition()
+	case token.Switch:
+		return p.parseSwitchStatement()
 	case token.EOL:
 		return nil, nil
 	default:
@@ -345,6 +347,58 @@ func (p *Parser) parseBinExpression(left ast.IExpression, terminatedTokens []tok
 	return expression, nil
 }
 
+func (p *Parser) parseSwitchStatement() (ast.IExpression, error) {
+	stmt := &ast.Switch{Token: p.currToken}
+
+	var err error
+
+	if err = p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
+		return nil, err
+	}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	cases := make([]*ast.Case, 0)
+	for p.currToken.Type == token.Case {
+		if err = p.read(); err != nil {
+			return nil, err
+		}
+		caseBlock := &ast.Case{Token: token.Token{}}
+
+		caseBlock.Condition, err = p.parseExpression(Lowest, token.GetTokenTypes(token.Colon))
+		if err != nil {
+			return nil, err
+		}
+
+		if err = p.requireTokenSequence([]token.TokenType{token.Colon, token.EOL}); err != nil {
+			return nil, err
+		}
+
+		statements, err := p.parseBlockOfStatements([]token.TokenType{token.Case, token.Default, token.RBrace})
+		if err != nil {
+			return nil, err
+		}
+		caseBlock.PositiveBranch = &ast.StatementsBlock{Statements: statements}
+		cases = append(cases, caseBlock)
+	}
+	stmt.Cases = cases
+
+	if p.currToken.Type == token.Default {
+		if err = p.requireTokenSequence([]token.TokenType{token.Colon, token.EOL}); err != nil {
+			return nil, err
+		}
+		statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
+		if err != nil {
+			return nil, err
+		}
+		stmt.DefaultBranch = &ast.StatementsBlock{Statements: statements}
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 	stmt := &ast.IfStatement{Token: p.currToken}
 
@@ -367,7 +421,11 @@ func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 		return nil, err
 	}
 
-	statements, err := p.parseBlockOfStatements(token.RBrace)
+	statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
+	if err != nil {
+		return nil, err
+	}
+
 	stmt.PositiveBranch = &ast.StatementsBlock{Statements: statements}
 
 	if err = p.read(); err != nil {
@@ -382,7 +440,7 @@ func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 		return nil, err
 	}
 
-	statements, err = p.parseBlockOfStatements(token.RBrace)
+	statements, err = p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
 	stmt.ElseBranch = &ast.StatementsBlock{Statements: statements}
 
 	return stmt, err
@@ -462,12 +520,7 @@ func (p *Parser) parseFunction(terminatedTokens []token.TokenType) (ast.IExpress
 	}
 	function.ReturnType = typeToken.Value
 
-	err = p.read()
-	if err != nil {
-		return nil, err
-	}
-	_, err = p.getExpectedToken(token.LBrace)
-	if err != nil {
+	if err := p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
 		return nil, err
 	}
 
@@ -475,16 +528,7 @@ func (p *Parser) parseFunction(terminatedTokens []token.TokenType) (ast.IExpress
 	if err != nil {
 		return nil, err
 	}
-	_, err = p.getExpectedToken(token.EOL)
-	if err != nil {
-		return nil, err
-	}
-
-	err = p.read()
-	if err != nil {
-		return nil, err
-	}
-	statements, err := p.parseBlockOfStatements(token.RBrace)
+	statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
 	function.StatementsBlock = &ast.StatementsBlock{Statements: statements}
 
 	return function, err

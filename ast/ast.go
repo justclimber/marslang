@@ -120,6 +120,18 @@ type StructFieldCall struct {
 	Field      *Identifier
 }
 
+type Case struct {
+	Token          token.Token
+	Condition      IExpression
+	PositiveBranch *StatementsBlock
+}
+
+type Switch struct {
+	Token         token.Token
+	Cases         []*Case
+	DefaultBranch *StatementsBlock
+}
+
 func (node *Assignment) GetToken() token.Token       { return node.Token }
 func (node *UnaryExpression) GetToken() token.Token  { return node.Token }
 func (node *BinExpression) GetToken() token.Token    { return node.Token }
@@ -137,6 +149,8 @@ func (node *IfStatement) GetToken() token.Token      { return node.Token }
 func (node *StructDefinition) GetToken() token.Token { return node.Token }
 func (node *Struct) GetToken() token.Token           { return node.Token }
 func (node *StructFieldCall) GetToken() token.Token  { return node.Token }
+func (node *Case) GetToken() token.Token             { return node.Token }
+func (node *Switch) GetToken() token.Token           { return node.Token }
 func (node *StatementsBlock) GetToken() token.Token {
 	if len(node.Statements) > 0 {
 		return node.Statements[0].GetToken()
