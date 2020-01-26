@@ -546,25 +546,8 @@ func (p *Parser) parseFunctionCall(function ast.IExpression, terminatedTokens []
 func (p *Parser) parseExpressions(closeTokens []token.TokenType) ([]ast.IExpression, error) {
 	var expressions []ast.IExpression
 
-	if p.currTokenIn(closeTokens) {
-		return expressions, nil
-	}
-
-	// todo можно сделать в одном цикле
-	expression, err := p.parseExpression(Lowest, closeTokens)
-	if err != nil {
-		return nil, err
-	}
-	expressions = append(expressions, expression)
-
-	if err = p.read(); err != nil {
-		return nil, err
-	}
-	for p.currToken.Type == token.Comma {
-		if err = p.read(); err != nil {
-			return nil, err
-		}
-		expression, err = p.parseExpression(Lowest, closeTokens)
+	for !p.currTokenIn(closeTokens) {
+		expression, err := p.parseExpression(Lowest, append(closeTokens, token.Comma))
 		if err != nil {
 			return nil, err
 		}
@@ -572,7 +555,13 @@ func (p *Parser) parseExpressions(closeTokens []token.TokenType) ([]ast.IExpress
 		if err = p.read(); err != nil {
 			return nil, err
 		}
+		if p.currToken.Type == token.Comma {
+			if err = p.read(); err != nil {
+				return nil, err
+			}
+		}
 	}
+
 	return expressions, nil
 }
 
