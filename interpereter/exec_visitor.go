@@ -15,104 +15,17 @@ func NewExecAstVisitor(ast *ast.StatementsBlock, env *object.Environment) *ExecA
 	return &ExecAstVisitor{env: env, ast: ast}
 }
 
-type IExecNodeVisitor interface {
-	Exec(env *object.Environment) (object.Object, error)
-}
-
 func (e *ExecAstVisitor) ExecAst() error {
-	block := StatementsBlock{e.ast, e}
-	_, err := block.Exec(e.env)
+	_, err := e.ExecStatementsBlock(e.ast, e.env)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-type StatementsBlock struct {
-	node *ast.StatementsBlock
-	ex   *ExecAstVisitor
-}
-type Statement struct {
-	node ast.IStatement
-	ex   *ExecAstVisitor
-}
-type Expression struct {
-	node ast.IExpression
-	ex   *ExecAstVisitor
-}
-type ExpressionList struct {
-	node []ast.IExpression
-	ex   *ExecAstVisitor
-}
-type Assignment struct {
-	node *ast.Assignment
-	ex   *ExecAstVisitor
-}
-type UnaryExpression struct {
-	node *ast.UnaryExpression
-	ex   *ExecAstVisitor
-}
-type BinExpression struct {
-	node *ast.BinExpression
-	ex   *ExecAstVisitor
-}
-type Identifier struct {
-	node *ast.Identifier
-	ex   *ExecAstVisitor
-}
-type Return struct {
-	node *ast.Return
-	ex   *ExecAstVisitor
-}
-type Function struct {
-	node *ast.Function
-	ex   *ExecAstVisitor
-}
-type FunctionCall struct {
-	node *ast.FunctionCall
-	ex   *ExecAstVisitor
-}
-type IfStatement struct {
-	node *ast.IfStatement
-	ex   *ExecAstVisitor
-}
-type Array struct {
-	node *ast.Array
-	ex   *ExecAstVisitor
-}
-type ArrayIndexCall struct {
-	node *ast.ArrayIndexCall
-	ex   *ExecAstVisitor
-}
-type Struct struct {
-	node *ast.Struct
-	ex   *ExecAstVisitor
-}
-type StructFieldCall struct {
-	node *ast.StructFieldCall
-	ex   *ExecAstVisitor
-}
-type Switch struct {
-	node *ast.Switch
-	ex   *ExecAstVisitor
-}
-type NumInt struct {
-	node *ast.NumInt
-	ex   *ExecAstVisitor
-}
-type NumFloat struct {
-	node *ast.NumFloat
-	ex   *ExecAstVisitor
-}
-type Boolean struct {
-	node *ast.Boolean
-	ex   *ExecAstVisitor
-}
-
-func (v *StatementsBlock) Exec(env *object.Environment) (object.Object, error) {
-	for _, statement := range v.node.Statements {
-		vs := Statement{statement, v.ex}
-		result, err := vs.Exec(env)
+func (e *ExecAstVisitor) ExecStatementsBlock(node *ast.StatementsBlock, env *object.Environment) (object.Object, error) {
+	for _, statement := range node.Statements {
+		result, err := e.ExecStatement(statement, env)
 		if err != nil {
 			return nil, err
 		}
@@ -125,71 +38,65 @@ func (v *StatementsBlock) Exec(env *object.Environment) (object.Object, error) {
 	return nil, nil
 }
 
-func (v *Statement) Exec(env *object.Environment) (object.Object, error) {
-	var stmt IExecNodeVisitor
-	switch astNode := v.node.(type) {
+func (e *ExecAstVisitor) ExecStatement(node ast.IStatement, env *object.Environment) (object.Object, error) {
+	switch astNode := node.(type) {
 	case *ast.Assignment:
-		stmt = &Assignment{astNode, v.ex}
+		return e.ExecAssignment(astNode, env)
 	case *ast.Return:
-		stmt = &Return{astNode, v.ex}
+		return e.ExecReturn(astNode, env)
 	case *ast.IfStatement:
-		stmt = &IfStatement{astNode, v.ex}
+		return e.ExecIfStatement(astNode, env)
 	case *ast.Switch:
-		stmt = &Switch{astNode, v.ex}
+		return e.ExecSwitch(astNode, env)
 	case *ast.StructDefinition:
 		if err := RegisterStructDefinition(astNode, env); err != nil {
 			return nil, err
 		}
 		return nil, nil
 	default:
-		return nil, runtimeError(v.node, "Unexpected node for statement: %T", v.node)
+		return nil, runtimeError(node, "Unexpected node for statement: %T", node)
 	}
-
-	return stmt.Exec(env)
 }
 
-func (v *Expression) Exec(env *object.Environment) (object.Object, error) {
-	var expression IExecNodeVisitor
-	switch astNode := v.node.(type) {
+func (e *ExecAstVisitor) ExecExpression(node ast.IExpression, env *object.Environment) (object.Object, error) {
+	switch astNode := node.(type) {
 	case *ast.UnaryExpression:
-		expression = &UnaryExpression{astNode, v.ex}
+		return e.ExecUnaryExpression(astNode, env)
 	case *ast.BinExpression:
-		expression = &BinExpression{astNode, v.ex}
+		return e.ExecBinExpression(astNode, env)
 	case *ast.Struct:
-		expression = &Struct{astNode, v.ex}
+		return e.ExecStruct(astNode, env)
 	case *ast.StructFieldCall:
-		expression = &StructFieldCall{astNode, v.ex}
+		return e.ExecStructFieldCall(astNode, env)
 	case *ast.NumInt:
-		expression = &NumInt{astNode, v.ex}
+		return e.ExecNumInt(astNode, env)
 	case *ast.NumFloat:
-		expression = &NumFloat{astNode, v.ex}
+		return e.ExecNumFloat(astNode, env)
 	case *ast.Boolean:
-		expression = &Boolean{astNode, v.ex}
+		return e.ExecBoolean(astNode, env)
 	case *ast.Array:
-		expression = &Array{astNode, v.ex}
+		return e.ExecArray(astNode, env)
 	case *ast.ArrayIndexCall:
-		expression = &ArrayIndexCall{astNode, v.ex}
+		return e.ExecArrayIndexCall(astNode, env)
 	case *ast.Identifier:
-		expression = &Identifier{astNode, v.ex}
+		return e.ExecIdentifier(astNode, env)
 	case *ast.Function:
-		expression = &Function{astNode, v.ex}
+		return e.ExecFunction(astNode, env)
 	case *ast.FunctionCall:
-		expression = &FunctionCall{astNode, v.ex}
+		return e.ExecFunctionCall(astNode, env)
 	default:
-		return nil, runtimeError(v.node, "Unexpected node for expression: %T", v.node)
+		return nil, runtimeError(node, "Unexpected node for expression: %T", node)
 	}
-	return expression.Exec(env)
 }
 
-func (v *Assignment) Exec(env *object.Environment) (object.Object, error) {
-	expression := Expression{v.node.Value, v.ex}
-	value, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecAssignment(node *ast.Assignment, env *object.Environment) (object.Object, error) {
+	value, err := e.ExecExpression(node.Value, env)
 	if err != nil {
 		return nil, err
 	}
-	varName := v.node.Name.Value
+	varName := node.Name.Value
 	if oldVar, isVarExist := env.Get(varName); isVarExist && oldVar.Type() != value.Type() {
-		return nil, runtimeError(v.node.Value, "type mismatch on assinment: var type is %s and value type is %s",
+		return nil, runtimeError(node.Value, "type mismatch on assinment: var type is %s and value type is %s",
 			oldVar.Type(), value.Type())
 	}
 
@@ -197,13 +104,12 @@ func (v *Assignment) Exec(env *object.Environment) (object.Object, error) {
 	return nil, nil
 }
 
-func (v *UnaryExpression) Exec(env *object.Environment) (object.Object, error) {
-	expression := Expression{v.node.Right, v.ex}
-	right, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecUnaryExpression(node *ast.UnaryExpression, env *object.Environment) (object.Object, error) {
+	right, err := e.ExecExpression(node.Right, env)
 	if err != nil {
 		return nil, err
 	}
-	switch v.node.Operator {
+	switch node.Operator {
 	case "!":
 		// TBD
 		return nil, nil
@@ -216,89 +122,83 @@ func (v *UnaryExpression) Exec(env *object.Environment) (object.Object, error) {
 			value := right.(*object.Float).Value
 			return &object.Float{Value: -value}, nil
 		default:
-			return nil, runtimeError(v.node, "unknown operator: -%s", right.Type())
+			return nil, runtimeError(node, "unknown operator: -%s", right.Type())
 		}
 	default:
-		return nil, runtimeError(v.node, "unknown operator: %s%s", v.node.Operator, right.Type())
+		return nil, runtimeError(node, "unknown operator: %s%s", node.Operator, right.Type())
 	}
 }
 
-func (v *BinExpression) Exec(env *object.Environment) (object.Object, error) {
-	l := Expression{v.node.Left, v.ex}
-	left, err := l.Exec(env)
+func (e *ExecAstVisitor) ExecBinExpression(node *ast.BinExpression, env *object.Environment) (object.Object, error) {
+	left, err := e.ExecExpression(node.Left, env)
 	if err != nil {
 		return nil, err
 	}
-	r := Expression{v.node.Right, v.ex}
-	right, err := r.Exec(env)
+	right, err := e.ExecExpression(node.Right, env)
 	if err != nil {
 		return nil, err
 	}
 
 	if left.Type() != right.Type() {
-		return nil, runtimeError(v.node, "forbidden operation on different types: %s and %s",
+		return nil, runtimeError(node, "forbidden operation on different types: %s and %s",
 			left.Type(), right.Type())
 	}
 
-	result, err := execScalarBinOperation(left, right, v.node.Operator)
+	result, err := execScalarBinOperation(left, right, node.Operator)
 	return result, err
 }
 
-func (v *Identifier) Exec(env *object.Environment) (object.Object, error) {
-	if val, ok := env.Get(v.node.Value); ok {
+func (e *ExecAstVisitor) ExecIdentifier(node *ast.Identifier, env *object.Environment) (object.Object, error) {
+	if val, ok := env.Get(node.Value); ok {
 		return val, nil
 	}
 
-	if builtin, ok := Builtins[v.node.Value]; ok {
+	if builtin, ok := Builtins[node.Value]; ok {
 		return builtin, nil
 	}
 
-	return nil, runtimeError(v.node, "identifier not found: %s ", v.node.Value)
+	return nil, runtimeError(node, "identifier not found: "+node.Value)
 }
 
-func (v *Return) Exec(env *object.Environment) (object.Object, error) {
-	expression := Expression{v.node.ReturnValue, v.ex}
-	value, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecReturn(node *ast.Return, env *object.Environment) (object.Object, error) {
+	value, err := e.ExecExpression(node.ReturnValue, env)
 	return &object.ReturnValue{Value: value}, err
 }
 
-func (v *Function) Exec(env *object.Environment) (object.Object, error) {
+func (e *ExecAstVisitor) ExecFunction(node *ast.Function, env *object.Environment) (object.Object, error) {
 	return &object.Function{
-		Arguments:  v.node.Arguments,
-		Statements: v.node.StatementsBlock,
-		ReturnType: v.node.ReturnType,
+		Arguments:  node.Arguments,
+		Statements: node.StatementsBlock,
+		ReturnType: node.ReturnType,
 		Env:        env,
 	}, nil
 }
 
-func (v *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
-	expression := Expression{v.node.Function, v.ex}
-	functionObj, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecFunctionCall(node *ast.FunctionCall, env *object.Environment) (object.Object, error) {
+	functionObj, err := e.ExecExpression(node.Function, env)
 	if err != nil {
 		return nil, err
 	}
 
-	list := ExpressionList{v.node.Arguments, v.ex}
-	args, err := list.ExecList(env)
+	args, err := e.execExpressionList(node.Arguments, env)
 	if err != nil {
 		return nil, err
 	}
 
 	switch fn := functionObj.(type) {
 	case *object.Function:
-		err = functionCallArgumentsCheck(v.node, fn.Arguments, args)
+		err = functionCallArgumentsCheck(node, fn.Arguments, args)
 		if err != nil {
 			return nil, err
 		}
 
 		functionEnv := transferArgsToNewEnv(fn, args)
-		block := StatementsBlock{fn.Statements, v.ex}
-		result, err := block.Exec(functionEnv)
+		result, err := e.ExecStatementsBlock(fn.Statements, functionEnv)
 		if err != nil {
 			return nil, err
 		}
 
-		if err = functionReturnTypeCheck(v.node, result, fn.ReturnType); err != nil {
+		if err = functionReturnTypeCheck(node, result, fn.ReturnType); err != nil {
 			return nil, err
 		}
 
@@ -310,23 +210,21 @@ func (v *FunctionCall) Exec(env *object.Environment) (object.Object, error) {
 			return nil, err
 		}
 
-		if err = functionReturnTypeCheck(v.node, result, fn.ReturnType); err != nil {
+		if err = functionReturnTypeCheck(node, result, fn.ReturnType); err != nil {
 			return nil, err
 		}
 
 		return result, nil
 
 	default:
-		return nil, runtimeError(v.node, "not a function: %s", fn.Type())
+		return nil, runtimeError(node, "not a function: %s", fn.Type())
 	}
 }
-
-func (v *ExpressionList) ExecList(env *object.Environment) ([]object.Object, error) {
+func (e *ExecAstVisitor) execExpressionList(expressions []ast.IExpression, env *object.Environment) ([]object.Object, error) {
 	var result []object.Object
 
-	for _, e := range v.node {
-		expression := Expression{e, v.ex}
-		evaluated, err := expression.Exec(env)
+	for _, expr := range expressions {
+		evaluated, err := e.ExecExpression(expr, env)
 		if err != nil {
 			return nil, err
 		}
@@ -336,83 +234,76 @@ func (v *ExpressionList) ExecList(env *object.Environment) ([]object.Object, err
 	return result, nil
 }
 
-func (v *IfStatement) Exec(env *object.Environment) (object.Object, error) {
-	expression := Expression{v.node.Condition, v.ex}
-	condition, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecIfStatement(node *ast.IfStatement, env *object.Environment) (object.Object, error) {
+	condition, err := e.ExecExpression(node.Condition, env)
 	if err != nil {
 		return nil, err
 	}
 	if condition.Type() != object.BooleanObj {
-		return nil, runtimeError(v.node, "Condition should be boolean type but %s in fact", condition.Type())
+		return nil, runtimeError(node, "Condition should be boolean type but %s in fact", condition.Type())
 	}
 
 	if condition == ReservedObjTrue {
-		block := StatementsBlock{v.node.PositiveBranch, v.ex}
-		return block.Exec(env)
-	} else if v.node.ElseBranch != nil {
-		block := StatementsBlock{v.node.ElseBranch, v.ex}
-		return block.Exec(env)
+		return e.ExecStatementsBlock(node.PositiveBranch, env)
+	} else if node.ElseBranch != nil {
+		return e.ExecStatementsBlock(node.ElseBranch, env)
 	} else {
 		return nil, nil
 	}
 }
 
-func (v *Array) Exec(env *object.Environment) (object.Object, error) {
-	list := ExpressionList{v.node.Elements, v.ex}
-	elements, err := list.ExecList(env)
+func (e *ExecAstVisitor) ExecArray(node *ast.Array, env *object.Environment) (object.Object, error) {
+	elements, err := e.execExpressionList(node.Elements, env)
 	if err != nil {
 		return nil, err
 	}
-	if err = arrayElementsTypeCheck(v.node, v.node.ElementsType, elements); err != nil {
+	if err = arrayElementsTypeCheck(node, node.ElementsType, elements); err != nil {
 		return nil, err
 	}
 
 	return &object.Array{
-		ElementsType: v.node.ElementsType,
+		ElementsType: node.ElementsType,
 		Elements:     elements,
 	}, nil
 }
 
-func (v *ArrayIndexCall) Exec(env *object.Environment) (object.Object, error) {
-	expression := Expression{v.node.Left, v.ex}
-	left, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (object.Object, error) {
+	left, err := e.ExecExpression(node.Left, env)
 	if err != nil {
 		return nil, err
 	}
 
-	i2 := Expression{v.node.Index, v.ex}
-	index, err := i2.Exec(env)
+	index, err := e.ExecExpression(node.Index, env)
 	if err != nil {
 		return nil, err
 	}
 
 	arrayObj, ok := left.(*object.Array)
 	if !ok {
-		return nil, runtimeError(v.node, "Array access can be only on arrays but '%s' given", left.Type())
+		return nil, runtimeError(node, "Array access can be only on arrays but '%s' given", left.Type())
 	}
 
 	indexObj, ok := index.(*object.Integer)
 	if !ok {
-		return nil, runtimeError(v.node, "Array access can be only by 'int' type but '%s' given", index.Type())
+		return nil, runtimeError(node, "Array access can be only by 'int' type but '%s' given", index.Type())
 	}
 
 	i := indexObj.Value
 	if i < 0 || int(i) > len(arrayObj.Elements)-1 {
-		return nil, runtimeError(v.node, "Array access out of bounds: '%d'", i)
+		return nil, runtimeError(node, "Array access out of bounds: '%d'", i)
 	}
 
 	return arrayObj.Elements[i], nil
 }
 
-func (v *Struct) Exec(env *object.Environment) (object.Object, error) {
-	definition, ok := env.GetStructDefinition(v.node.Ident.Value)
+func (e *ExecAstVisitor) ExecStruct(node *ast.Struct, env *object.Environment) (object.Object, error) {
+	definition, ok := env.GetStructDefinition(node.Ident.Value)
 	if !ok {
-		return nil, runtimeError(v.node, "Struct '%s' is not defined", v.node.Ident.Value)
+		return nil, runtimeError(node, "Struct '%s' is not defined", node.Ident.Value)
 	}
 	fields := make(map[string]object.Object)
-	for _, n := range v.node.Fields {
-		expression := Expression{n.Value, v.ex}
-		result, err := expression.Exec(env)
+	for _, n := range node.Fields {
+		result, err := e.ExecExpression(n.Value, env)
 		if err != nil {
 			return nil, err
 		}
@@ -424,7 +315,7 @@ func (v *Struct) Exec(env *object.Environment) (object.Object, error) {
 		fields[n.Name.Value] = result
 	}
 	if len(fields) != len(definition.Fields) {
-		return nil, runtimeError(v.node,
+		return nil, runtimeError(node,
 			"Var of struct '%s' should have %d fields filled but in fact only %d",
 			definition.Name,
 			len(definition.Fields),
@@ -438,31 +329,29 @@ func (v *Struct) Exec(env *object.Environment) (object.Object, error) {
 	return obj, nil
 }
 
-func (v *StructFieldCall) Exec(env *object.Environment) (object.Object, error) {
-	expression := Expression{v.node.StructExpr, v.ex}
-	left, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecStructFieldCall(node *ast.StructFieldCall, env *object.Environment) (object.Object, error) {
+	left, err := e.ExecExpression(node.StructExpr, env)
 	if err != nil {
 		return nil, err
 	}
 
 	structObj, ok := left.(*object.Struct)
 	if !ok {
-		return nil, runtimeError(v.node, "Field access can be only on struct but '%s' given", left.Type())
+		return nil, runtimeError(node, "Field access can be only on struct but '%s' given", left.Type())
 	}
 
-	fieldObj, ok := structObj.Fields[v.node.Field.Value]
+	fieldObj, ok := structObj.Fields[node.Field.Value]
 	if !ok {
-		return nil, runtimeError(v.node,
-			"Struct '%s' doesn't have field '%s'", structObj.Definition.Name, v.node.Field.Value)
+		return nil, runtimeError(node,
+			"Struct '%s' doesn't have field '%s'", structObj.Definition.Name, node.Field.Value)
 	}
 
 	return fieldObj, nil
 }
 
-func (v *Switch) Exec(env *object.Environment) (object.Object, error) {
-	for _, c := range v.node.Cases {
-		expression := Expression{c.Condition, v.ex}
-		condition, err := expression.Exec(env)
+func (e *ExecAstVisitor) ExecSwitch(node *ast.Switch, env *object.Environment) (object.Object, error) {
+	for _, c := range node.Cases {
+		condition, err := e.ExecExpression(c.Condition, env)
 		if err != nil {
 			return nil, err
 		}
@@ -472,20 +361,18 @@ func (v *Switch) Exec(env *object.Environment) (object.Object, error) {
 		}
 		conditionResult, _ := condition.(*object.Boolean)
 		if conditionResult.Value {
-			block := StatementsBlock{c.PositiveBranch, v.ex}
-			result, err := block.Exec(env)
+			result, err := e.ExecStatementsBlock(c.PositiveBranch, env)
 			if err != nil {
 				return nil, err
 			}
 			if result != nil && result.Type() == object.ReturnValueObj {
 				return result, nil
 			}
-			return nil, nil
+			return &object.Void{}, nil
 		}
 	}
-	if v.node.DefaultBranch != nil {
-		block := StatementsBlock{v.node.DefaultBranch, v.ex}
-		result, err := block.Exec(env)
+	if node.DefaultBranch != nil {
+		result, err := e.ExecStatementsBlock(node.DefaultBranch, env)
 		if err != nil {
 			return nil, err
 		}
@@ -493,17 +380,17 @@ func (v *Switch) Exec(env *object.Environment) (object.Object, error) {
 			return result, nil
 		}
 	}
-	return nil, nil
+	return &object.Void{}, nil
 }
 
-func (v *NumInt) Exec(env *object.Environment) (object.Object, error) {
-	return &object.Integer{Value: v.node.Value}, nil
+func (e *ExecAstVisitor) ExecNumInt(node *ast.NumInt, env *object.Environment) (object.Object, error) {
+	return &object.Integer{Value: node.Value}, nil
 }
 
-func (v *NumFloat) Exec(env *object.Environment) (object.Object, error) {
-	return &object.Float{Value: v.node.Value}, nil
+func (e *ExecAstVisitor) ExecNumFloat(node *ast.NumFloat, env *object.Environment) (object.Object, error) {
+	return &object.Float{Value: node.Value}, nil
 }
 
-func (v *Boolean) Exec(env *object.Environment) (object.Object, error) {
-	return nativeBooleanToBoolean(v.node.Value), nil
+func (e *ExecAstVisitor) ExecBoolean(node *ast.Boolean, env *object.Environment) (object.Object, error) {
+	return nativeBooleanToBoolean(node.Value), nil
 }

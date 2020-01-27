@@ -453,7 +453,8 @@ func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
 	env := object.NewEnvironment()
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
-	_, err = Exec(astProgram, env)
+
+	err = NewExecAstVisitor(astProgram, env).ExecAst()
 	require.Nil(t, err)
 	return env
 }
@@ -467,7 +468,8 @@ b = a[1]
 		p, _ := parser.New(l)
 		env := object.NewEnvironment()
 		astProgram, _ := p.Parse()
-		_, _ = Exec(astProgram, env)
+		_ = NewExecAstVisitor(astProgram, env).ExecAst()
+		//_, _ = Exec(astProgram, env)
 	}
 }
 func BenchmarkExecOnlyAst(b *testing.B) {
@@ -498,6 +500,7 @@ px = m.p.x
 	astProgram, _ := p.Parse()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = Exec(astProgram, env)
+		_ = NewExecAstVisitor(astProgram, env).ExecAst()
+		//_, _ = Exec(astProgram, env)
 	}
 }
