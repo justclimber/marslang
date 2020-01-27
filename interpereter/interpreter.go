@@ -13,7 +13,7 @@ var (
 	ReservedObjFalse = &object.Boolean{Value: false}
 )
 
-func Exec(node ast.Node, env *object.Environment) (object.Object, error) {
+func Exec(node ast.INode, env *object.Environment) (object.Object, error) {
 	var result object.Object
 	var err error
 
@@ -470,7 +470,7 @@ func transferArgsToNewEnv(fn *object.Function, args []object.Object) *object.Env
 	return env
 }
 
-func runtimeError(node ast.Node, format string, args ...interface{}) error {
+func runtimeError(node ast.INode, format string, args ...interface{}) error {
 	msg := fmt.Sprintf(format, args...)
 	t := node.GetToken()
 	return errors.New(fmt.Sprintf("%s\nline:%d, pos %d", msg, t.Line, t.Col))

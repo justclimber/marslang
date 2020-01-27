@@ -4,16 +4,16 @@ import (
 	"aakimov/marslang/token"
 )
 
-type Node interface {
+type INode interface {
 	GetToken() token.Token
 }
 
 type IExpression interface {
-	Node
+	INode
 }
 
 type IStatement interface {
-	Node
+	INode
 }
 
 type StatementsBlock struct {
