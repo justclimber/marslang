@@ -358,7 +358,7 @@ p = point{x = 1., y = 2}
 	require.Nil(t, err)
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
-	err = NewExecAstVisitor(astProgram, object.NewEnvironment()).ExecAst()
+	err = NewExecAstVisitor().ExecAst(astProgram, object.NewEnvironment())
 	require.NotNil(t, err, "Should be error type mismatch")
 }
 
@@ -374,7 +374,7 @@ p = point{x = 1., z = 2.}
 	require.Nil(t, err)
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
-	err = NewExecAstVisitor(astProgram, object.NewEnvironment()).ExecAst()
+	err = NewExecAstVisitor().ExecAst(astProgram, object.NewEnvironment())
 	require.NotNil(t, err, "Should be error var mismatch")
 }
 
@@ -390,7 +390,7 @@ p = point{x = 1.}
 	require.Nil(t, err)
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
-	err = NewExecAstVisitor(astProgram, object.NewEnvironment()).ExecAst()
+	err = NewExecAstVisitor().ExecAst(astProgram, object.NewEnvironment())
 	require.NotNil(t, err, "Should be error not all struct vars filled")
 }
 
@@ -403,7 +403,7 @@ b = a[1]
 	require.Nil(t, err)
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
-	err = NewExecAstVisitor(astProgram, object.NewEnvironment()).ExecAst()
+	err = NewExecAstVisitor().ExecAst(astProgram, object.NewEnvironment())
 	require.NotNil(t, err)
 }
 
@@ -454,7 +454,7 @@ func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
 	astProgram, err := p.Parse()
 	require.Nil(t, err)
 
-	err = NewExecAstVisitor(astProgram, env).ExecAst()
+	err = NewExecAstVisitor().ExecAst(astProgram, env)
 	require.Nil(t, err)
 	return env
 }
@@ -468,7 +468,7 @@ b = a[1]
 		p, _ := parser.New(l)
 		env := object.NewEnvironment()
 		astProgram, _ := p.Parse()
-		_ = NewExecAstVisitor(astProgram, env).ExecAst()
+		_ = NewExecAstVisitor().ExecAst(astProgram, env)
 	}
 }
 func BenchmarkExecOnlyAst(b *testing.B) {
@@ -499,6 +499,6 @@ px = m.p.x
 	astProgram, _ := p.Parse()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewExecAstVisitor(astProgram, env).ExecAst()
+		_ = NewExecAstVisitor().ExecAst(astProgram, env)
 	}
 }
