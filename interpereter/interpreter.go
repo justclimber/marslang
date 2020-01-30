@@ -50,17 +50,9 @@ func arrayElementsTypeCheck(node *ast.Array, t string, es []object.Object) error
 }
 
 func functionReturnTypeCheck(node *ast.FunctionCall, result object.Object, functionReturnType string) error {
-	if result == nil && functionReturnType != "void" {
+	if result.Type() != object.ObjectType(functionReturnType) {
 		return runtimeError(node,
-			"Return type mismatch: function declared to return '%s' but in fact has no return",
-			functionReturnType)
-	} else if result != nil && functionReturnType == "void" {
-		return runtimeError(node,
-			"Return type mismatch: function declared as void but in fact return '%s'",
-			result.Type())
-	} else if result != nil && functionReturnType != "void" && result.Type() != object.ObjectType(functionReturnType) {
-		return runtimeError(node,
-			"Return type mismatch: function declared to return '%s' but in fact return '%s'",
+			"Return type mismatch: function declared as '%s' but in fact return '%s'",
 			functionReturnType, result.Type())
 	}
 	return nil

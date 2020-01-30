@@ -29,6 +29,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("Runtime error: %s\n", err.Error())
 	}
-	fmt.Println("")
 	env.Print()
 }

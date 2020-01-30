@@ -75,6 +75,8 @@ func (e *ExecAstVisitor) execStatement(node ast.IStatement, env *object.Environm
 		return e.execIfStatement(astNode, env)
 	case *ast.Switch:
 		return e.execSwitch(astNode, env)
+	case *ast.FunctionCall:
+		return e.execFunctionCall(astNode, env)
 	case *ast.StructDefinition:
 		if err := registerStructDefinition(astNode, env); err != nil {
 			return nil, err
@@ -117,6 +119,7 @@ func (e *ExecAstVisitor) execExpression(node ast.IExpression, env *object.Enviro
 }
 
 func (e *ExecAstVisitor) execAssignment(node *ast.Assignment, env *object.Environment) (object.Object, error) {
+	// todo check builtins
 	e.execCallback(Assignment)
 	value, err := e.execExpression(node.Value, env)
 	if err != nil {
@@ -230,6 +233,10 @@ func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.En
 		result, err := e.execStatementsBlock(fn.Statements, functionEnv)
 		if err != nil {
 			return nil, err
+		}
+
+		if result == nil {
+			result = &object.Void{}
 		}
 
 		if err = functionReturnTypeCheck(node, result, fn.ReturnType); err != nil {
