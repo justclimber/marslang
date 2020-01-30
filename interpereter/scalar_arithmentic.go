@@ -3,7 +3,6 @@ package interpereter
 import (
 	"aakimov/marslang/object"
 	"aakimov/marslang/token"
-	"errors"
 	"fmt"
 )
 
@@ -46,7 +45,7 @@ func integerBinOperation(left, right *object.Integer, operator string) (object.O
 	case token.NotEq:
 		return nativeBooleanToBoolean(left.Value != right.Value), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("unknown operator: %s %s %s", left.Type(), operator, right.Type()))
+		return nil, fmt.Errorf("unsupported operator for types: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
@@ -76,7 +75,7 @@ func floatBinOperation(left, right *object.Float, operator string) (object.Objec
 	case token.NotEq:
 		return nativeBooleanToBoolean(left.Value != right.Value), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("unknown operator: %s %s %s", left.Type(), operator, right.Type()))
+		return nil, fmt.Errorf("unsupported operator for types: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
@@ -86,7 +85,11 @@ func booleanBinOperation(left, right *object.Boolean, operator string) (object.O
 		return nativeBooleanToBoolean(left.Value == right.Value), nil
 	case token.NotEq:
 		return nativeBooleanToBoolean(left.Value != right.Value), nil
+	case token.And:
+		return nativeBooleanToBoolean(left.Value && right.Value), nil
+	case token.Or:
+		return nativeBooleanToBoolean(left.Value || right.Value), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("unknown operator: %s %s %s", left.Type(), operator, right.Type()))
+		return nil, fmt.Errorf("unsupported operator for types: %s %s %s", left.Type(), operator, right.Type())
 	}
 }

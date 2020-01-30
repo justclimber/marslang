@@ -112,6 +112,22 @@ func (l *Lexer) NextToken() (token.Token, error) {
 			currToken.Type = token.Bang
 			currToken.Value = string(l.currChar)
 		}
+	case '&':
+		if l.nextChar == '&' {
+			currToken.Value = token.And
+			currToken.Type = token.And
+			l.read()
+		} else {
+			return currToken, l.error("Unexpected one `&`. Did you mean '&&'?")
+		}
+	case '|':
+		if l.nextChar == '|' {
+			currToken.Value = token.Or
+			currToken.Type = token.Or
+			l.read()
+		} else {
+			return currToken, l.error("Unexpected one `|`. Did you mean '||'?")
+		}
 	case 0:
 		currToken.Value = ""
 		currToken.Type = token.EOF

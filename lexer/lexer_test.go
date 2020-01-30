@@ -137,6 +137,23 @@ func TestRealShort(t *testing.T) {
 	testLexerInput(input, tests, t)
 }
 
+func TestLogicalAndOr(t *testing.T) {
+	input := `a = true && false || false`
+
+	tests := []expectedTestToken{
+		{token.Ident, "a"},
+		{token.Assignment, "="},
+		{token.True, "true"},
+		{token.And, "&&"},
+		{token.False, "false"},
+		{token.Or, "||"},
+		{token.False, "false"},
+		{token.EOF, ""},
+	}
+
+	testLexerInput(input, tests, t)
+}
+
 func TestStruct(t *testing.T) {
 	input := `struct point {
    float x

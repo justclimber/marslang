@@ -23,6 +23,34 @@ func TestParenthesis(t *testing.T) {
 	require.Equal(t, int64(9), varAInt.Value)
 }
 
+func TestAnd(t *testing.T) {
+	input := `a = true && false
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Boolean{}, varA)
+
+	varABool, ok := varA.(*object.Boolean)
+	require.Equal(t, false, varABool.Value)
+}
+
+func TestOr(t *testing.T) {
+	input := `a = true || false
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Boolean{}, varA)
+
+	varABool, ok := varA.(*object.Boolean)
+	require.Equal(t, true, varABool.Value)
+}
+
 func TestFunctionCallWith2Args(t *testing.T) {
 	input := `a = fn(int x, int y) int {
    return x + y

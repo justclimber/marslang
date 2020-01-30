@@ -28,6 +28,8 @@ const (
 	Eq    = "=="
 	NotEq = "!="
 	Bang  = "!"
+	And   = "&&"
+	Or    = "||"
 
 	NumInt   = "int_num"
 	NumFloat = "float_num"

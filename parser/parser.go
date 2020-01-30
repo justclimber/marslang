@@ -13,6 +13,8 @@ const (
 	_ int = iota
 	Lowest
 	Assignment // =
+	Or         // ||
+	And        // &&
 	Equals     // ==
 	Comparison // > or <
 	Sum        // +
@@ -28,6 +30,8 @@ var precedences = map[token.TokenType]int{
 	token.Lt:         Comparison,
 	token.Gt:         Comparison,
 	token.Assignment: Assignment,
+	token.And:        And,
+	token.Or:         Or,
 	token.Plus:       Sum,
 	token.Minus:      Sum,
 	token.Slash:      Product,
@@ -86,6 +90,8 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerBinExprFunction(token.Lt, p.parseBinExpression)
 	p.registerBinExprFunction(token.Gt, p.parseBinExpression)
 	p.registerBinExprFunction(token.Eq, p.parseBinExpression)
+	p.registerBinExprFunction(token.And, p.parseBinExpression)
+	p.registerBinExprFunction(token.Or, p.parseBinExpression)
 	p.registerBinExprFunction(token.NotEq, p.parseBinExpression)
 	p.registerBinExprFunction(token.Asterisk, p.parseBinExpression)
 	p.registerBinExprFunction(token.Assignment, p.parseBinExpression)
