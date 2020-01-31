@@ -29,3 +29,12 @@ case a == 0:
 default:
    r1 = 5
 }
+
+switch a {
+case < 20:
+   r2 = 1
+case == 0:
+   r2 = 3
+default:
+   r1 = 5
+}

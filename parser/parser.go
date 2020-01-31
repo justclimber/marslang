@@ -94,7 +94,6 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerBinExprFunction(token.Or, p.parseBinExpression)
 	p.registerBinExprFunction(token.NotEq, p.parseBinExpression)
 	p.registerBinExprFunction(token.Asterisk, p.parseBinExpression)
-	p.registerBinExprFunction(token.Assignment, p.parseBinExpression)
 	p.registerBinExprFunction(token.LParen, p.parseFunctionCall)
 	p.registerBinExprFunction(token.LBracket, p.parseArrayIndexCall)
 	p.registerBinExprFunction(token.LBrace, p.parseStructExpression)
@@ -190,24 +189,21 @@ func (p *Parser) parseAssignment(terminatedTokens []token.TokenType) (*ast.Assig
 		Token: p.currToken,
 		Name:  identStmt,
 	}
-	err = p.read()
-	if err != nil {
+	if err = p.read(); err != nil {
 		return nil, err
 	}
 	_, err = p.getExpectedToken(token.Assignment)
 	if err != nil {
 		return nil, err
 	}
-	err = p.read()
-	if err != nil {
+	if err = p.read(); err != nil {
 		return nil, err
 	}
 	assignStmt.Value, err = p.parseExpression(Lowest, terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
-	err = p.read()
-	if err != nil {
+	if err = p.read(); err != nil {
 		return nil, err
 	}
 
@@ -242,11 +238,20 @@ func (p *Parser) parseExpression(precedence int, terminatedTokens []token.TokenT
 		return nil, err
 	}
 
-	leftExp, err := unaryFunction(terminatedTokens)
+	leftExpr, err := unaryFunction(terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
 
+	return p.parseRightPartOfExpression(leftExpr, precedence, terminatedTokens)
+}
+
+func (p *Parser) parseRightPartOfExpression(
+	leftExpr ast.IExpression,
+	precedence int,
+	terminatedTokens []token.TokenType,
+) (ast.IExpression, error) {
+	var err error
 	nextPrecedence := p.nextPrecedence()
 	for !p.nextTokenIn(terminatedTokens) && precedence < nextPrecedence {
 		binExprFunction := p.binExprFunctions[p.nextToken.Type]
@@ -255,17 +260,16 @@ func (p *Parser) parseExpression(precedence int, terminatedTokens []token.TokenT
 			return nil, err
 		}
 
-		err = p.read()
-		if err != nil {
+		if err = p.read(); err != nil {
 			return nil, err
 		}
-		leftExp, err = binExprFunction(leftExp, terminatedTokens)
+		leftExpr, err = binExprFunction(leftExpr, terminatedTokens)
 
 		if err != nil {
 			return nil, err
 		}
 	}
-	return leftExp, nil
+	return leftExpr, nil
 }
 
 func (p *Parser) parseIdentifierAsExpression(terminatedTokens []token.TokenType) (ast.IExpression, error) {
@@ -306,8 +310,7 @@ func (p *Parser) parseUnaryExpression(terminatedTokens []token.TokenType) (ast.I
 		Token:    p.currToken,
 		Operator: p.currToken.Value,
 	}
-	err := p.read()
-	if err != nil {
+	if err := p.read(); err != nil {
 		return nil, err
 	}
 	expressionResult, err := p.parseExpression(Prefix, terminatedTokens)
@@ -338,10 +341,9 @@ func (p *Parser) parseBinExpression(left ast.IExpression, terminatedTokens []tok
 		Operator: p.currToken.Value,
 		Left:     left,
 	}
-
+	var err error
 	precedence := p.curPrecedence()
-	err := p.read()
-	if err != nil {
+	if err = p.read(); err != nil {
 		return nil, err
 	}
 
@@ -357,6 +359,17 @@ func (p *Parser) parseSwitchStatement() (ast.IExpression, error) {
 	stmt := &ast.Switch{Token: p.currToken}
 
 	var err error
+	if p.nextToken.Type != token.LBrace {
+		if err = p.read(); err != nil {
+			return nil, err
+		}
+
+		expr, err := p.parseExpression(Lowest, token.GetTokenTypes(token.LBrace))
+		if err != nil {
+			return nil, err
+		}
+		stmt.SwitchExpression = expr
+	}
 
 	if err = p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
 		return nil, err
@@ -368,12 +381,20 @@ func (p *Parser) parseSwitchStatement() (ast.IExpression, error) {
 
 	cases := make([]*ast.Case, 0)
 	for p.currToken.Type == token.Case {
-		if err = p.read(); err != nil {
-			return nil, err
-		}
 		caseBlock := &ast.Case{Token: token.Token{}}
 
-		caseBlock.Condition, err = p.parseExpression(Lowest, token.GetTokenTypes(token.Colon))
+		if stmt.SwitchExpression != nil {
+			caseBlock.Condition, err = p.parseRightPartOfExpression(
+				stmt.SwitchExpression,
+				Lowest,
+				token.GetTokenTypes(token.Colon),
+			)
+		} else {
+			if err = p.read(); err != nil {
+				return nil, err
+			}
+			caseBlock.Condition, err = p.parseExpression(Lowest, token.GetTokenTypes(token.Colon))
+		}
 		if err != nil {
 			return nil, err
 		}

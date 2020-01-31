@@ -127,9 +127,10 @@ type Case struct {
 }
 
 type Switch struct {
-	Token         token.Token
-	Cases         []*Case
-	DefaultBranch *StatementsBlock
+	Token            token.Token
+	Cases            []*Case
+	SwitchExpression IExpression
+	DefaultBranch    *StatementsBlock
 }
 
 func (node *Assignment) GetToken() token.Token       { return node.Token }
