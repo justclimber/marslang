@@ -25,7 +25,7 @@ func main() {
 	}
 	env := object.NewEnvironment()
 	fmt.Println("Program output:")
-	err = interpereter.NewExecAstVisitor().ExecAst(astProgram, object.NewEnvironment())
+	err = interpereter.NewExecAstVisitor().ExecAst(astProgram, env)
 	if err != nil {
 		log.Fatalf("Runtime error: %s\n", err.Error())
 	}
