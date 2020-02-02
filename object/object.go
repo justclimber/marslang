@@ -130,6 +130,7 @@ func (s *Struct) Inspect() string {
 type BuiltinFunction func(args ...Object) (Object, error)
 
 type Builtin struct {
+	Name       string
 	Fn         BuiltinFunction
 	ReturnType string
 }

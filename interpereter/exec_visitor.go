@@ -29,15 +29,21 @@ const (
 	Identifier
 	Function
 	FunctionCall
+	Builtin
 )
 
 type OperationType int
 
-type ExecCallback func(OperationType)
+type Operation struct {
+	Type     OperationType
+	FuncName string
+}
+
+type ExecCallback func(Operation)
 
 func NewExecAstVisitor() *ExecAstVisitor {
 	e := &ExecAstVisitor{
-		execCallback: func(operationType OperationType) {},
+		execCallback: func(operation Operation) {},
 		builtins:     make(map[string]*object.Builtin),
 	}
 	e.setupBasicBuiltinFunctions()
@@ -126,7 +132,7 @@ func (e *ExecAstVisitor) execExpression(node ast.IExpression, env *object.Enviro
 
 func (e *ExecAstVisitor) execAssignment(node *ast.Assignment, env *object.Environment) (object.Object, error) {
 	// todo check builtins
-	e.execCallback(Assignment)
+	e.execCallback(Operation{Type: Assignment})
 	value, err := e.execExpression(node.Value, env)
 	if err != nil {
 		return nil, err
@@ -142,7 +148,7 @@ func (e *ExecAstVisitor) execAssignment(node *ast.Assignment, env *object.Enviro
 }
 
 func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *object.Environment) (object.Object, error) {
-	e.execCallback(Unary)
+	e.execCallback(Operation{Type: Unary})
 	right, err := e.execExpression(node.Right, env)
 	if err != nil {
 		return nil, err
@@ -168,7 +174,7 @@ func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *obj
 }
 
 func (e *ExecAstVisitor) execBinExpression(node *ast.BinExpression, env *object.Environment) (object.Object, error) {
-	e.execCallback(BinExpr)
+	e.execCallback(Operation{Type: BinExpr})
 	left, err := e.execExpression(node.Left, env)
 	if err != nil {
 		return nil, err
@@ -188,7 +194,7 @@ func (e *ExecAstVisitor) execBinExpression(node *ast.BinExpression, env *object.
 }
 
 func (e *ExecAstVisitor) execIdentifier(node *ast.Identifier, env *object.Environment) (object.Object, error) {
-	e.execCallback(Identifier)
+	e.execCallback(Operation{Type: Identifier})
 	if val, ok := env.Get(node.Value); ok {
 		return val, nil
 	}
@@ -201,13 +207,13 @@ func (e *ExecAstVisitor) execIdentifier(node *ast.Identifier, env *object.Enviro
 }
 
 func (e *ExecAstVisitor) execReturn(node *ast.Return, env *object.Environment) (object.Object, error) {
-	e.execCallback(Return)
+	e.execCallback(Operation{Type: Return})
 	value, err := e.execExpression(node.ReturnValue, env)
 	return &object.ReturnValue{Value: value}, err
 }
 
 func (e *ExecAstVisitor) execFunction(node *ast.Function, env *object.Environment) (object.Object, error) {
-	e.execCallback(Function)
+	e.execCallback(Operation{Type: Function})
 	return &object.Function{
 		Arguments:  node.Arguments,
 		Statements: node.StatementsBlock,
@@ -217,7 +223,7 @@ func (e *ExecAstVisitor) execFunction(node *ast.Function, env *object.Environmen
 }
 
 func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.Environment) (object.Object, error) {
-	e.execCallback(FunctionCall)
+	e.execCallback(Operation{Type: FunctionCall})
 	functionObj, err := e.execExpression(node.Function, env)
 	if err != nil {
 		return nil, err
@@ -252,6 +258,7 @@ func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.En
 		return result, nil
 
 	case *object.Builtin:
+		e.execCallback(Operation{Type: Builtin, FuncName: fn.Name})
 		result, err := fn.Fn(args...)
 		if err != nil {
 			return nil, err
@@ -282,7 +289,7 @@ func (e *ExecAstVisitor) execExpressionList(expressions []ast.IExpression, env *
 }
 
 func (e *ExecAstVisitor) execIfStatement(node *ast.IfStatement, env *object.Environment) (object.Object, error) {
-	e.execCallback(IfStmt)
+	e.execCallback(Operation{Type: IfStmt})
 	condition, err := e.execExpression(node.Condition, env)
 	if err != nil {
 		return nil, err
@@ -301,7 +308,7 @@ func (e *ExecAstVisitor) execIfStatement(node *ast.IfStatement, env *object.Envi
 }
 
 func (e *ExecAstVisitor) execArray(node *ast.Array, env *object.Environment) (object.Object, error) {
-	e.execCallback(Array)
+	e.execCallback(Operation{Type: Array})
 	elements, err := e.execExpressionList(node.Elements, env)
 	if err != nil {
 		return nil, err
@@ -317,7 +324,7 @@ func (e *ExecAstVisitor) execArray(node *ast.Array, env *object.Environment) (ob
 }
 
 func (e *ExecAstVisitor) execArrayIndexCall(node *ast.ArrayIndexCall, env *object.Environment) (object.Object, error) {
-	e.execCallback(ArrayIndex)
+	e.execCallback(Operation{Type: ArrayIndex})
 	left, err := e.execExpression(node.Left, env)
 	if err != nil {
 		return nil, err
@@ -347,7 +354,7 @@ func (e *ExecAstVisitor) execArrayIndexCall(node *ast.ArrayIndexCall, env *objec
 }
 
 func (e *ExecAstVisitor) execStruct(node *ast.Struct, env *object.Environment) (object.Object, error) {
-	e.execCallback(Struct)
+	e.execCallback(Operation{Type: Struct})
 	definition, ok := env.GetStructDefinition(node.Ident.Value)
 	if !ok {
 		return nil, runtimeError(node, "Struct '%s' is not defined", node.Ident.Value)
@@ -381,7 +388,7 @@ func (e *ExecAstVisitor) execStruct(node *ast.Struct, env *object.Environment) (
 }
 
 func (e *ExecAstVisitor) execStructFieldCall(node *ast.StructFieldCall, env *object.Environment) (object.Object, error) {
-	e.execCallback(StructFieldCall)
+	e.execCallback(Operation{Type: StructFieldCall})
 	left, err := e.execExpression(node.StructExpr, env)
 	if err != nil {
 		return nil, err
@@ -402,7 +409,7 @@ func (e *ExecAstVisitor) execStructFieldCall(node *ast.StructFieldCall, env *obj
 }
 
 func (e *ExecAstVisitor) execSwitch(node *ast.Switch, env *object.Environment) (object.Object, error) {
-	e.execCallback(Switch)
+	e.execCallback(Operation{Type: Switch})
 	for _, c := range node.Cases {
 		condition, err := e.execExpression(c.Condition, env)
 		if err != nil {
@@ -437,16 +444,16 @@ func (e *ExecAstVisitor) execSwitch(node *ast.Switch, env *object.Environment) (
 }
 
 func (e *ExecAstVisitor) execNumInt(node *ast.NumInt, env *object.Environment) (object.Object, error) {
-	e.execCallback(NumInt)
+	e.execCallback(Operation{Type: NumInt})
 	return &object.Integer{Value: node.Value}, nil
 }
 
 func (e *ExecAstVisitor) execNumFloat(node *ast.NumFloat, env *object.Environment) (object.Object, error) {
-	e.execCallback(NumFloat)
+	e.execCallback(Operation{Type: NumFloat})
 	return &object.Float{Value: node.Value}, nil
 }
 
 func (e *ExecAstVisitor) execBoolean(node *ast.Boolean, env *object.Environment) (object.Object, error) {
-	e.execCallback(Boolean)
+	e.execCallback(Operation{Type: Boolean})
 	return nativeBooleanToBoolean(node.Value), nil
 }
