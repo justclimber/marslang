@@ -8,6 +8,7 @@ import (
 
 type ExecAstVisitor struct {
 	execCallback ExecCallback
+	builtins     map[string]*object.Builtin
 }
 
 const (
@@ -35,7 +36,12 @@ type OperationType int
 type ExecCallback func(OperationType)
 
 func NewExecAstVisitor() *ExecAstVisitor {
-	return &ExecAstVisitor{execCallback: func(operationType OperationType) {}}
+	e := &ExecAstVisitor{
+		execCallback: func(operationType OperationType) {},
+		builtins:     make(map[string]*object.Builtin),
+	}
+	e.setupBasicBuiltinFunctions()
+	return e
 }
 
 func (e *ExecAstVisitor) SetExecCallback(callback ExecCallback) {
@@ -187,7 +193,7 @@ func (e *ExecAstVisitor) execIdentifier(node *ast.Identifier, env *object.Enviro
 		return val, nil
 	}
 
-	if builtin, ok := Builtins[node.Value]; ok {
+	if builtin, ok := e.builtins[node.Value]; ok {
 		return builtin, nil
 	}
 
