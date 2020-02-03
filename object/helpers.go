@@ -115,8 +115,8 @@ func getLangObject(t interface{}) Object {
 		v, _ := t.(float64)
 		return &Float{Value: v}
 	case int:
-		v, _ := t.(int64)
-		return &Integer{Value: v}
+		v, _ := t.(int)
+		return &Integer{Value: int64(v)}
 	case bool:
 		v, _ := t.(bool)
 		return &Boolean{Value: v}
