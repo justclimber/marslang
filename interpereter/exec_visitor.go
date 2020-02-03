@@ -69,7 +69,7 @@ func (e *ExecAstVisitor) execStatementsBlock(node *ast.StatementsBlock, env *obj
 			return nil, err
 		}
 		if returnStmt, ok := result.(*object.ReturnValue); ok {
-			return returnStmt.Value, nil
+			return returnStmt, nil
 		}
 		// if result is not return - ignore. Statements not return anything else
 	}
@@ -249,6 +249,8 @@ func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.En
 
 		if result == nil {
 			result = &object.Void{}
+		} else if result.Type() == object.ReturnValueObj {
+			result = result.(*object.ReturnValue).Value
 		}
 
 		if err = functionReturnTypeCheck(node, result, fn.ReturnType); err != nil {
