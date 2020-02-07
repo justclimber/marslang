@@ -6,8 +6,6 @@ import (
 )
 
 const (
-	None = ""
-
 	EOL = "EOL"
 	EOF = "EOF"
 
