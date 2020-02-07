@@ -12,6 +12,7 @@ struct point {
    float x
    float y
 }
+// comments here
 struct mech {
    point p
 }
@@ -26,7 +27,7 @@ case a < 20:
    r1 = 1
 case a == 0:
    r1 = 3
-default:
+default: // this is also comment
    r1 = 5
 }
 

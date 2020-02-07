@@ -71,7 +71,6 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		token.Plus,
 		token.Minus,
 		token.Asterisk,
-		token.Slash,
 		token.LParen,
 		token.RParen,
 		token.LBrace,
@@ -128,6 +127,14 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		} else {
 			return currToken, l.error("Unexpected one `|`. Did you mean '||'?")
 		}
+	case '/':
+		if l.nextChar == '/' {
+			l.consumeComment()
+			return l.NextToken()
+		} else {
+			currToken.Value = token.Slash
+			currToken.Type = token.Slash
+		}
 	case 0:
 		currToken.Value = ""
 		currToken.Type = token.EOF
@@ -162,6 +169,12 @@ func (l *Lexer) GetCurrLineAndPos() (int, int) {
 
 func (l *Lexer) skipWhitespace() {
 	for l.currChar == ' ' {
+		l.read()
+	}
+}
+
+func (l *Lexer) consumeComment() {
+	for l.currChar != '\n' {
 		l.read()
 	}
 }

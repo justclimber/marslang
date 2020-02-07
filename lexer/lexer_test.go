@@ -16,6 +16,7 @@ type expectedTestToken struct {
 func TestNextTokenGeneric(t *testing.T) {
 	input := `a = (5 + 6)
 b = 3 > 2 < 1
+// comment here
 v = b == 1
 z = b != 1
 x = !y == true
