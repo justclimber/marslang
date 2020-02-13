@@ -13,6 +13,7 @@ const (
 	Comma      = ","
 	Dot        = "."
 	Colon      = ":"
+	Question   = "?"
 
 	// arithmetical operators
 	Plus     = "+"
@@ -48,6 +49,7 @@ const (
 	True     = "true"
 	False    = "false"
 	If       = "if"
+	IfEmpty  = "ifempty"
 	Else     = "else"
 	Switch   = "switch"
 	Case     = "case"
@@ -81,6 +83,7 @@ var keywords = map[string]TokenType{
 	"switch":  Switch,
 	"case":    Case,
 	"default": Default,
+	"ifempty": IfEmpty,
 }
 
 func LookupIdent(ident string) TokenType {

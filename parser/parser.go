@@ -82,6 +82,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerUnaryExprFunction(token.LParen, p.parseGroupedExpression)
 	p.registerUnaryExprFunction(token.Function, p.parseFunction)
 	p.registerUnaryExprFunction(token.Type, p.parseArray)
+	p.registerUnaryExprFunction(token.Question, p.parseQuestionExpression)
 
 	p.binExprFunctions = make(map[token.TokenType]binExprFunctions)
 	p.registerBinExprFunction(token.Plus, p.parseBinExpression)
@@ -168,6 +169,8 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 		return p.parseReturn()
 	case token.If:
 		return p.parseIfStatement()
+	case token.IfEmpty:
+		return p.parseIfEmptyStatement()
 	case token.Struct:
 		return p.parseStructDefinition()
 	case token.Switch:
@@ -322,6 +325,27 @@ func (p *Parser) parseUnaryExpression(terminatedTokens []token.TokenType) (ast.I
 	return node, err
 }
 
+func (p *Parser) parseQuestionExpression(terminatedTokens []token.TokenType) (ast.IExpression, error) {
+	node := &ast.QuestionExpression{Token: p.currToken}
+	if err := p.read(); err != nil {
+		return nil, err
+	}
+	// array
+	if (p.currToken.Type == token.Ident || p.currToken.Type == token.Type) && p.nextToken.Type == "[" {
+		if err := p.requireTokenSequence([]token.TokenType{token.LBracket, token.RBracket}); err != nil {
+			return nil, err
+		}
+		node.Type = fmt.Sprintf("%s[]", p.currToken.Value)
+		return node, nil
+	}
+	// scalar type or struct
+	if p.currToken.Type == token.Ident || p.currToken.Type == token.Type {
+		node.Type = p.currToken.Value
+		return node, nil
+	}
+	return nil, p.parseError("type expected after '?', '%s' found", p.currToken.Type)
+}
+
 func (p *Parser) parseReal(terminatedTokens []token.TokenType) (ast.IExpression, error) {
 	node := &ast.NumFloat{Token: p.currToken}
 
@@ -469,6 +493,42 @@ func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 
 	statements, err = p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
 	stmt.ElseBranch = &ast.StatementsBlock{Statements: statements}
+
+	return stmt, err
+}
+
+func (p *Parser) parseIfEmptyStatement() (ast.IExpression, error) {
+	stmt := &ast.IfEmptyStatement{Token: p.currToken}
+
+	var err error
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	stmt.Assignment, err = p.parseAssignment(token.GetTokenTypes(token.LBrace))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := p.requireTokenSequence([]token.TokenType{token.EOL}); err != nil {
+		return nil, err
+	}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
+	if err != nil {
+		return nil, err
+	}
+
+	stmt.EmptyBranch = &ast.StatementsBlock{Statements: statements}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
 
 	return stmt, err
 }

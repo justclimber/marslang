@@ -67,6 +67,7 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	simpleTokens := []string{
 		token.Comma,
 		token.Colon,
+		token.Question,
 		token.Dot,
 		token.Plus,
 		token.Minus,

@@ -18,6 +18,7 @@ const (
 	IfStmt
 	Switch
 	Unary
+	Question
 	BinExpr
 	Struct
 	StructFieldCall
@@ -85,6 +86,8 @@ func (e *ExecAstVisitor) execStatement(node ast.IStatement, env *object.Environm
 		return e.execReturn(astNode, env)
 	case *ast.IfStatement:
 		return e.execIfStatement(astNode, env)
+	case *ast.IfEmptyStatement:
+		return e.execIfEmptyStatement(astNode, env)
 	case *ast.Switch:
 		return e.execSwitch(astNode, env)
 	case *ast.FunctionCall:
@@ -103,6 +106,8 @@ func (e *ExecAstVisitor) execExpression(node ast.IExpression, env *object.Enviro
 	switch astNode := node.(type) {
 	case *ast.UnaryExpression:
 		return e.execUnaryExpression(astNode, env)
+	case *ast.QuestionExpression:
+		return e.execQuestionExpression(astNode, env)
 	case *ast.BinExpression:
 		return e.execBinExpression(astNode, env)
 	case *ast.Struct:
@@ -144,7 +149,7 @@ func (e *ExecAstVisitor) execAssignment(node *ast.Assignment, env *object.Enviro
 	}
 
 	env.Set(varName, value)
-	return nil, nil
+	return value, nil
 }
 
 func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *object.Environment) (object.Object, error) {
@@ -170,6 +175,18 @@ func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *obj
 		}
 	default:
 		return nil, runtimeError(node, "unknown operator: %s%s", node.Operator, right.Type())
+	}
+}
+
+func (e *ExecAstVisitor) execQuestionExpression(node *ast.QuestionExpression, env *object.Environment) (object.Object, error) {
+	e.execCallback(Operation{Type: Question})
+	switch node.Type {
+	case object.IntegerObj:
+		return &object.Integer{Emptier: object.Emptier{Empty: true}}, nil
+	case object.FloatObj:
+		return &object.Float{Emptier: object.Emptier{Empty: true}}, nil
+	default:
+		return nil, runtimeError(node, "? is not supported on type: '%s'", node.Type)
 	}
 }
 
@@ -307,6 +324,32 @@ func (e *ExecAstVisitor) execIfStatement(node *ast.IfStatement, env *object.Envi
 	} else {
 		return nil, nil
 	}
+}
+
+func (e *ExecAstVisitor) execIfEmptyStatement(node *ast.IfEmptyStatement, env *object.Environment) (object.Object, error) {
+	e.execCallback(Operation{Type: IfStmt})
+	assignmentResult, err := e.execAssignment(node.Assignment, env)
+	if err != nil {
+		return nil, err
+	}
+	isEmpty := false
+	switch obj := assignmentResult.(type) {
+	case *object.Integer:
+		isEmpty = obj.Empty
+	case *object.Float:
+		isEmpty = obj.Empty
+	case *object.Array:
+		isEmpty = obj.Empty
+	case *object.Struct:
+		isEmpty = obj.Empty
+	default:
+		return nil, runtimeError(node, "Type '%s' can't be empty", assignmentResult.Type())
+	}
+
+	if isEmpty {
+		return e.execStatementsBlock(node.EmptyBranch, env)
+	}
+	return nil, nil
 }
 
 func (e *ExecAstVisitor) execArray(node *ast.Array, env *object.Environment) (object.Object, error) {

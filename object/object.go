@@ -24,6 +24,12 @@ type Object interface {
 	Inspect() string
 }
 
+type Emptier struct {
+	Empty bool
+}
+
+func (e *Emptier) IsEmpty() bool { return e.Empty }
+
 type StructDefinition struct {
 	Name   string
 	Fields map[string]string
@@ -41,6 +47,7 @@ type IIdentifier interface{}
 type IStatements interface{}
 
 type Integer struct {
+	Emptier
 	Value int64
 }
 
@@ -48,6 +55,7 @@ func (i *Integer) Type() ObjectType { return IntegerObj }
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 
 type Float struct {
+	Emptier
 	Value float64
 }
 
@@ -62,6 +70,7 @@ func (b *Boolean) Type() ObjectType { return BooleanObj }
 func (b *Boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
 
 type Array struct {
+	Emptier
 	ElementsType string
 	Elements     []Object
 }
@@ -106,6 +115,7 @@ func (f *Function) Inspect() string {
 }
 
 type Struct struct {
+	Emptier
 	Definition *StructDefinition
 	Fields     map[string]Object
 }

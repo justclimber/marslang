@@ -49,6 +49,7 @@ func (e *Environment) CreateAndInjectStruct(definitionName, varName string, s ma
 		Name:   definitionName,
 		Fields: f,
 	}
+	_ = e.RegisterStructDefinition(structDefinition)
 
 	fields := make(map[string]Object)
 	for k, v := range s {
@@ -65,6 +66,25 @@ type AbstractStruct struct {
 	Fields map[string]interface{}
 }
 
+func (e *Environment) CreateAndInjectEmptyArrayOfStructs(definitionName, varName string, sa []AbstractStruct) {
+	if len(sa) == 0 {
+		return
+	}
+	f := make(map[string]string)
+	for k, v := range sa[0].Fields {
+		f[k] = getLangType(v)
+	}
+	structDefinition := &StructDefinition{
+		Name:   definitionName,
+		Fields: f,
+	}
+	_ = e.RegisterStructDefinition(structDefinition)
+	e.Set(varName, &Array{
+		ElementsType: definitionName,
+		Emptier:      Emptier{Empty: true},
+	})
+}
+
 func (e *Environment) CreateAndInjectArrayOfStructs(definitionName, varName string, sa []AbstractStruct) {
 	if len(sa) == 0 {
 		return
@@ -77,6 +97,7 @@ func (e *Environment) CreateAndInjectArrayOfStructs(definitionName, varName stri
 		Name:   definitionName,
 		Fields: f,
 	}
+	_ = e.RegisterStructDefinition(structDefinition)
 
 	els := make([]Object, 0, len(sa))
 

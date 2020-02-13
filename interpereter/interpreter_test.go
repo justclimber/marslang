@@ -156,6 +156,50 @@ b = -a
 	require.Equal(t, int64(5), varBInt.Value)
 }
 
+func TestQuestionAndIfemptyTrue(t *testing.T) {
+	input := `ifempty a = ?int {
+b = 5
+}
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varA)
+
+	varAInt, ok := varA.(*object.Integer)
+	require.True(t, varAInt.Empty)
+
+	varB, ok := env.Get("b")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varB)
+
+	varBInt, ok := varB.(*object.Integer)
+	require.Equal(t, int64(5), varBInt.Value)
+}
+
+func TestQuestionAndIfemptyFalse(t *testing.T) {
+	input := `ifempty a = 1 {
+b = 5
+}
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varA)
+
+	varAInt, ok := varA.(*object.Integer)
+	require.False(t, varAInt.Empty)
+
+	_, ok = env.Get("b")
+
+	require.False(t, ok)
+}
+
 func TestExecIfStatement(t *testing.T) {
 	input := `if 4 == 3 {
     a = 10

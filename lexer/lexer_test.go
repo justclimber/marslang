@@ -41,6 +41,7 @@ c = fn(int a, int b) int {
 		{token.Lt, "<"},
 		{token.NumInt, "1"},
 		{token.EOL, ""},
+		{token.EOL, ""},
 		{token.Ident, "v"},
 		{token.Assignment, "="},
 		{token.Ident, "b"},
