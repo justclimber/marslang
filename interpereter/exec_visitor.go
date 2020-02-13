@@ -271,6 +271,7 @@ func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.En
 			return nil, err
 		}
 
+		// todo: what is fn.Env?
 		functionEnv := transferArgsToNewEnv(fn, args)
 		result, err := e.execStatementsBlock(fn.Statements, functionEnv)
 		if err != nil {
@@ -291,7 +292,7 @@ func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.En
 
 	case *object.Builtin:
 		e.execCallback(Operation{Type: Builtin, FuncName: fn.Name})
-		result, err := fn.Fn(args...)
+		result, err := fn.Fn(env, args...)
 		if err != nil {
 			return nil, err
 		}

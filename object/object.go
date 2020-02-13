@@ -137,7 +137,7 @@ func (s *Struct) Inspect() string {
 	return out.String()
 }
 
-type BuiltinFunction func(args ...Object) (Object, error)
+type BuiltinFunction func(env *Environment, args ...Object) (Object, error)
 
 type Builtin struct {
 	Name       string

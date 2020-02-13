@@ -11,7 +11,7 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 	e.builtins["print"] = &object.Builtin{
 		Name:       "print",
 		ReturnType: object.VoidObj,
-		Fn: func(args ...object.Object) (object.Object, error) {
+		Fn: func(env *object.Environment, args ...object.Object) (object.Object, error) {
 			if len(args) != 1 {
 				return nil, BuiltinFuncError("wrong number of arguments. got=%d, want 1", len(args))
 			}
