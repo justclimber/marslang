@@ -29,6 +29,14 @@ func (e *Environment) ToStrings() []string {
 	return result
 }
 
+func NewEmptyStruct(def *StructDefinition) *Struct {
+	return &Struct{
+		Emptier:    Emptier{Empty: true},
+		Definition: def,
+		Fields:     make(map[string]Object),
+	}
+}
+
 func (e *Environment) Keys() []string {
 	keys := make([]string, len(e.store))
 
