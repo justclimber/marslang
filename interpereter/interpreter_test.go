@@ -180,6 +180,58 @@ b = 5
 	require.Equal(t, int64(5), varBInt.Value)
 }
 
+type expectedVarInEnv struct {
+	name     string
+	varType  string
+	typeCast string
+	isArray  bool
+}
+
+func TestEmptier(t *testing.T) {
+	input := `a = ?int
+b = ?float
+c = ?int[]
+struct point {
+int x
+int y
+}
+p = ?point
+pts = ?point[]
+`
+	env := testExecAngGetEnv(t, input)
+
+	for _, toTest := range []expectedVarInEnv{
+		{"a", "int", object.IntegerObj, false},
+		{"b", "float", object.FloatObj, false},
+		{"c", "int[]", object.IntegerObj, true},
+		{"p", "point", "struct", false},
+		{"pts", "point[]", "point", true},
+	} {
+		varToTest, ok := env.Get(toTest.name)
+		require.True(t, ok, "var %s not exist", toTest.name)
+		require.Equal(t, toTest.varType, string(varToTest.Type()), "var %s type mismatch, got %s, expected %s", toTest.name, varToTest.Type(), toTest.varType)
+		if toTest.isArray {
+			typeCasted, ok := varToTest.(*object.Array)
+			require.True(t, ok, "var %s internal type mismatch", toTest.name)
+			require.Equal(t, string(toTest.typeCast), typeCasted.ElementsType, "var %s array elements type mismatch", toTest.name)
+			require.True(t, typeCasted.Empty)
+		} else if toTest.typeCast == object.IntegerObj {
+			typeCasted, ok := varToTest.(*object.Integer)
+			require.True(t, ok, "var %s internal type mismatch", toTest.name)
+			require.True(t, typeCasted.Empty)
+		} else if toTest.typeCast == object.FloatObj {
+			typeCasted, ok := varToTest.(*object.Float)
+			require.True(t, ok, "var %s internal type mismatch", toTest.name)
+			require.True(t, typeCasted.Empty)
+		} else if def, ok := env.GetStructDefinition(toTest.varType); ok {
+			typeCasted, ok := varToTest.(*object.Struct)
+			require.True(t, ok, "var %s should be struct but got '%T'", toTest.name, varToTest)
+			require.Equal(t, toTest.varType, def.Name, "var %s struct definition mismatch", toTest.name)
+			require.True(t, typeCasted.Empty)
+		}
+	}
+}
+
 func TestQuestionAndIfemptyFalse(t *testing.T) {
 	input := `ifempty a = 1 {
 b = 5

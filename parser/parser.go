@@ -82,7 +82,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerUnaryExprFunction(token.LParen, p.parseGroupedExpression)
 	p.registerUnaryExprFunction(token.Function, p.parseFunction)
 	p.registerUnaryExprFunction(token.Type, p.parseArray)
-	p.registerUnaryExprFunction(token.Question, p.parseQuestionExpression)
+	p.registerUnaryExprFunction(token.Question, p.parseEmptierExpression)
 
 	p.binExprFunctions = make(map[token.TokenType]binExprFunctions)
 	p.registerBinExprFunction(token.Plus, p.parseBinExpression)
@@ -325,22 +325,20 @@ func (p *Parser) parseUnaryExpression(terminatedTokens []token.TokenType) (ast.I
 	return node, err
 }
 
-func (p *Parser) parseQuestionExpression(terminatedTokens []token.TokenType) (ast.IExpression, error) {
-	node := &ast.QuestionExpression{Token: p.currToken}
+func (p *Parser) parseEmptierExpression(terminatedTokens []token.TokenType) (ast.IExpression, error) {
+	node := &ast.EmptierExpression{Token: p.currToken, IsArray: false}
 	if err := p.read(); err != nil {
 		return nil, err
 	}
-	// array
-	if (p.currToken.Type == token.Ident || p.currToken.Type == token.Type) && p.nextToken.Type == "[" {
-		if err := p.requireTokenSequence([]token.TokenType{token.LBracket, token.RBracket}); err != nil {
-			return nil, err
-		}
-		node.Type = fmt.Sprintf("%s[]", p.currToken.Value)
-		return node, nil
-	}
-	// scalar type or struct
+
 	if p.currToken.Type == token.Ident || p.currToken.Type == token.Type {
 		node.Type = p.currToken.Value
+		if p.nextToken.Type == "[" {
+			if err := p.requireTokenSequence([]token.TokenType{token.LBracket, token.RBracket}); err != nil {
+				return nil, err
+			}
+			node.IsArray = true
+		}
 		return node, nil
 	}
 	return nil, p.parseError("type expected after '?', '%s' found", p.currToken.Type)

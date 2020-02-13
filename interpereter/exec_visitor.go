@@ -106,8 +106,8 @@ func (e *ExecAstVisitor) execExpression(node ast.IExpression, env *object.Enviro
 	switch astNode := node.(type) {
 	case *ast.UnaryExpression:
 		return e.execUnaryExpression(astNode, env)
-	case *ast.QuestionExpression:
-		return e.execQuestionExpression(astNode, env)
+	case *ast.EmptierExpression:
+		return e.execEmptierExpression(astNode, env)
 	case *ast.BinExpression:
 		return e.execBinExpression(astNode, env)
 	case *ast.Struct:
@@ -178,14 +178,27 @@ func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *obj
 	}
 }
 
-func (e *ExecAstVisitor) execQuestionExpression(node *ast.QuestionExpression, env *object.Environment) (object.Object, error) {
+func (e *ExecAstVisitor) execEmptierExpression(node *ast.EmptierExpression, env *object.Environment) (object.Object, error) {
 	e.execCallback(Operation{Type: Question})
-	switch node.Type {
-	case object.IntegerObj:
+	if node.IsArray {
+		if node.Type == object.IntegerObj || node.Type == object.FloatObj {
+			return &object.Array{Emptier: object.Emptier{Empty: true}, ElementsType: node.Type}, nil
+		} else if _, ok := env.GetStructDefinition(node.Type); ok {
+			return &object.Array{Emptier: object.Emptier{Empty: true}, ElementsType: node.Type}, nil
+		} else {
+			return nil, runtimeError(node, "? is not supported on type: '%s[]'", node.Type)
+		}
+	} else if node.Type == object.IntegerObj {
 		return &object.Integer{Emptier: object.Emptier{Empty: true}}, nil
-	case object.FloatObj:
+	} else if node.Type == object.FloatObj {
 		return &object.Float{Emptier: object.Emptier{Empty: true}}, nil
-	default:
+	} else if def, ok := env.GetStructDefinition(node.Type); ok {
+		return &object.Struct{
+			Emptier:    object.Emptier{Empty: true},
+			Definition: def,
+			Fields:     make(map[string]object.Object),
+		}, nil
+	} else {
 		return nil, runtimeError(node, "? is not supported on type: '%s'", node.Type)
 	}
 }
