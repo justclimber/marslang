@@ -48,81 +48,15 @@ func (e *Environment) Keys() []string {
 	return keys
 }
 
-func (e *Environment) CreateAndInjectStruct(definitionName, varName string, s map[string]interface{}) {
-	f := make(map[string]string)
-	for k, v := range s {
-		f[k] = getLangType(v)
-	}
-	structDefinition := &StructDefinition{
-		Name:   definitionName,
-		Fields: f,
-	}
-	_ = e.RegisterStructDefinition(structDefinition)
-
+func (e *Environment) LoadVarsInStruct(definition *StructDefinition, s map[string]interface{}) *Struct {
 	fields := make(map[string]Object)
 	for k, v := range s {
 		fields[k] = getLangObject(v)
 	}
-
-	e.Set(varName, &Struct{
-		Definition: structDefinition,
+	return &Struct{
+		Definition: definition,
 		Fields:     fields,
-	})
-}
-
-type AbstractStruct struct {
-	Fields map[string]interface{}
-}
-
-func (e *Environment) CreateAndInjectEmptyArrayOfStructs(definitionName, varName string, sa []AbstractStruct) {
-	if len(sa) == 0 {
-		return
 	}
-	f := make(map[string]string)
-	for k, v := range sa[0].Fields {
-		f[k] = getLangType(v)
-	}
-	structDefinition := &StructDefinition{
-		Name:   definitionName,
-		Fields: f,
-	}
-	_ = e.RegisterStructDefinition(structDefinition)
-	e.Set(varName, &Array{
-		ElementsType: definitionName,
-		Emptier:      Emptier{Empty: true},
-	})
-}
-
-func (e *Environment) CreateAndInjectArrayOfStructs(definitionName, varName string, sa []AbstractStruct) {
-	if len(sa) == 0 {
-		return
-	}
-	f := make(map[string]string)
-	for k, v := range sa[0].Fields {
-		f[k] = getLangType(v)
-	}
-	structDefinition := &StructDefinition{
-		Name:   definitionName,
-		Fields: f,
-	}
-	_ = e.RegisterStructDefinition(structDefinition)
-
-	els := make([]Object, 0, len(sa))
-
-	for _, s := range sa {
-		fields := make(map[string]Object)
-		for k, v := range s.Fields {
-			fields[k] = getLangObject(v)
-		}
-		els = append(els, &Struct{
-			Definition: structDefinition,
-			Fields:     fields,
-		})
-	}
-	e.Set(varName, &Array{
-		ElementsType: definitionName,
-		Elements:     els,
-	})
 }
 
 func getLangType(t interface{}) string {
@@ -138,6 +72,7 @@ func getLangType(t interface{}) string {
 	}
 	return ""
 }
+
 func getLangObject(t interface{}) Object {
 	switch t.(type) {
 	case float64:
