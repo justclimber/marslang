@@ -24,16 +24,16 @@ func registerStructDefinition(node *ast.StructDefinition, env *object.Environmen
 }
 
 func structTypeAndVarsChecks(n *ast.Assignment, definition *object.StructDefinition, result object.Object) error {
-	fieldType, ok := definition.Fields[n.Name.Value]
+	fieldType, ok := definition.Fields[n.Left.Value]
 	if !ok {
 		return runtimeError(
-			n, "Struct '%s' doesn't have the field '%s' in the definition", definition.Name, n.Name.Value)
+			n, "Struct '%s' doesn't have the field '%s' in the definition", definition.Name, n.Left.Value)
 	}
 	if fieldType != string(result.Type()) {
 		return runtimeError(
 			n,
 			"Field '%s' defined as '%s' but '%s' given",
-			n.Name.Value,
+			n.Left.Value,
 			fieldType,
 			result.Type())
 	}

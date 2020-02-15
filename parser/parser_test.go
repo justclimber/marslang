@@ -25,7 +25,7 @@ b = 3
 		assert.IsType(t, &ast.Assignment{}, stmt, "%d statement", i)
 
 		assignStmt, _ := stmt.(*ast.Assignment)
-		assert.Equal(t, assignStmt.Name.Value, vars[i], "%d statement", i)
+		assert.Equal(t, assignStmt.Left.Value, vars[i], "%d statement", i)
 	}
 }
 
@@ -46,7 +46,7 @@ b = -a
 		assert.IsType(t, &ast.Assignment{}, stmt, "%d statement", i)
 
 		assignStmt, _ := stmt.(*ast.Assignment)
-		assert.Equal(t, assignStmt.Name.Value, vars[i], "%d statement", i)
+		assert.Equal(t, assignStmt.Left.Value, vars[i], "%d statement", i)
 
 		assert.IsType(t, &ast.UnaryExpression{}, assignStmt.Value, "%d statement", i)
 	}

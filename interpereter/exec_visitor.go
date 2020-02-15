@@ -14,6 +14,7 @@ type ExecAstVisitor struct {
 const (
 	_ OperationType = iota
 	Assignment
+	StructFieldAssignment
 	Return
 	IfStmt
 	Switch
@@ -82,6 +83,8 @@ func (e *ExecAstVisitor) execStatement(node ast.IStatement, env *object.Environm
 	switch astNode := node.(type) {
 	case *ast.Assignment:
 		return e.execAssignment(astNode, env)
+	case *ast.StructFieldAssignment:
+		return e.execStructFieldAssignment(astNode, env)
 	case *ast.Return:
 		return e.execReturn(astNode, env)
 	case *ast.IfStatement:
@@ -142,13 +145,42 @@ func (e *ExecAstVisitor) execAssignment(node *ast.Assignment, env *object.Enviro
 	if err != nil {
 		return nil, err
 	}
-	varName := node.Name.Value
+	varName := node.Left.Value
 	if oldVar, isVarExist := env.Get(varName); isVarExist && oldVar.Type() != value.Type() {
-		return nil, runtimeError(node.Value, "type mismatch on assinment: var type is %s and value type is %s",
+		return nil, runtimeError(node.Value, "type mismatch on assignment: var type is %s and value type is %s",
 			oldVar.Type(), value.Type())
 	}
 
 	env.Set(varName, value)
+	return value, nil
+}
+
+func (e *ExecAstVisitor) execStructFieldAssignment(
+	node *ast.StructFieldAssignment,
+	env *object.Environment,
+) (object.Object, error) {
+	e.execCallback(Operation{Type: StructFieldAssignment})
+	value, err := e.execExpression(node.Value, env)
+	if err != nil {
+		return nil, err
+	}
+
+	left, err := e.execExpression(node.Left.StructExpr, env)
+	if err != nil {
+		return nil, err
+	}
+
+	structObj, ok := left.(*object.Struct)
+	if !ok {
+		return nil, runtimeError(node, "Field access can be only on struct but '%s' given", left.Type())
+	}
+
+	_, ok = structObj.Fields[node.Left.Field.Value]
+	if !ok {
+		return nil, runtimeError(node,
+			"Struct '%s' doesn't have field '%s'", structObj.Definition.Name, node.Left.Field.Value)
+	}
+	structObj.Fields[node.Left.Field.Value] = value
 	return value, nil
 }
 
@@ -429,7 +461,7 @@ func (e *ExecAstVisitor) execStruct(node *ast.Struct, env *object.Environment) (
 			return nil, err
 		}
 
-		fields[n.Name.Value] = result
+		fields[n.Left.Value] = result
 	}
 	if len(fields) != len(definition.Fields) {
 		return nil, runtimeError(node,

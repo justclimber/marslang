@@ -162,6 +162,8 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 				return nil, err
 			}
 			return p.parseFunctionCall(function, token.GetTokenTypes(token.EOL))
+		} else if p.nextToken.Type == token.Dot {
+			return p.parseStructFieldAssignment(token.GetTokenTypes(token.EOL))
 		} else {
 			return p.parseAssignment(token.GetTokenTypes(token.EOL))
 		}
@@ -182,16 +184,65 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 	}
 }
 
-func (p *Parser) parseAssignment(terminatedTokens []token.TokenType) (*ast.Assignment, error) {
+func (p *Parser) parseStructFieldAssignment(terminatedTokens []token.TokenType) (*ast.StructFieldAssignment, error) {
+	assignStmt := &ast.StructFieldAssignment{Token: p.currToken}
+
 	identStmt, err := p.parseIdentifier(terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
-
-	assignStmt := &ast.Assignment{
-		Token: p.currToken,
-		Name:  identStmt,
+	if err = p.read(); err != nil {
+		return nil, err
 	}
+
+	_, err = p.getExpectedToken(token.Dot)
+	if err != nil {
+		return nil, err
+	}
+
+	structFieldCall, err := p.parseStructFieldCall(identStmt, terminatedTokens)
+	if err != nil {
+		return nil, err
+	}
+	assignStmt.Left = structFieldCall.(*ast.StructFieldCall)
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	_, err = p.getExpectedToken(token.Assignment)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+	assignStmt.Value, err = p.parseExpression(Lowest, terminatedTokens)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	_, err = p.getExpectedTokens(terminatedTokens)
+	if err != nil {
+		return nil, err
+	}
+
+	return assignStmt, nil
+}
+
+func (p *Parser) parseAssignment(terminatedTokens []token.TokenType) (*ast.Assignment, error) {
+	assignStmt := &ast.Assignment{Token: p.currToken}
+	identStmt, err := p.parseIdentifier(terminatedTokens)
+	if err != nil {
+		return nil, err
+	}
+	assignStmt.Left = identStmt
+
 	if err = p.read(); err != nil {
 		return nil, err
 	}
