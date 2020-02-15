@@ -139,13 +139,16 @@ func (e *ExecAstVisitor) execExpression(node ast.IExpression, env *object.Enviro
 }
 
 func (e *ExecAstVisitor) execAssignment(node *ast.Assignment, env *object.Environment) (object.Object, error) {
-	// todo check builtins
+	varName := node.Left.Value
+	if _, exists := e.builtins[varName]; exists {
+		return nil, runtimeError(node.Left, "Builtins are immutable")
+	}
 	e.execCallback(Operation{Type: Assignment})
 	value, err := e.execExpression(node.Value, env)
 	if err != nil {
 		return nil, err
 	}
-	varName := node.Left.Value
+
 	if oldVar, isVarExist := env.Get(varName); isVarExist && oldVar.Type() != value.Type() {
 		return nil, runtimeError(node.Value, "type mismatch on assignment: var type is %s and value type is %s",
 			oldVar.Type(), value.Type())
@@ -175,8 +178,7 @@ func (e *ExecAstVisitor) execStructFieldAssignment(
 		return nil, runtimeError(node, "Field access can be only on struct but '%s' given", left.Type())
 	}
 
-	_, ok = structObj.Fields[node.Left.Field.Value]
-	if !ok {
+	if _, ok = structObj.Fields[node.Left.Field.Value]; !ok {
 		return nil, runtimeError(node,
 			"Struct '%s' doesn't have field '%s'", structObj.Definition.Name, node.Left.Field.Value)
 	}

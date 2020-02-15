@@ -613,6 +613,20 @@ default:
 	require.Equal(t, int64(1), varR1Int.Value)
 }
 
+func TestExecAssignmentToBuiltinShouldFail(t *testing.T) {
+	input := `print = 10
+`
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	require.Nil(t, err)
+	env := object.NewEnvironment()
+	astProgram, err := p.Parse()
+	require.Nil(t, err)
+
+	err = NewExecAstVisitor().ExecAst(astProgram, env)
+	require.NotNil(t, err)
+}
+
 func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
 	l := lexer.New(input)
 	p, err := parser.New(l)
