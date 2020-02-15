@@ -187,31 +187,36 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 func (p *Parser) parseStructFieldAssignment(terminatedTokens []token.TokenType) (*ast.StructFieldAssignment, error) {
 	assignStmt := &ast.StructFieldAssignment{Token: p.currToken}
 
-	identStmt, err := p.parseIdentifier(terminatedTokens)
+	left, err := p.parseIdentifier(terminatedTokens)
 	if err != nil {
 		return nil, err
 	}
+
+	var leftWithFieldCall ast.IExpression
+	leftWithFieldCall = left
+
+	// nested structs can be here
+	for p.nextToken.Type == token.Dot {
+		if err = p.read(); err != nil {
+			return nil, err
+		}
+
+		if _, err = p.getExpectedToken(token.Dot); err != nil {
+			return nil, err
+		}
+
+		leftWithFieldCall, err = p.parseStructFieldCall(leftWithFieldCall, terminatedTokens)
+		if err != nil {
+			return nil, err
+		}
+	}
+	assignStmt.Left = leftWithFieldCall.(*ast.StructFieldCall)
+
 	if err = p.read(); err != nil {
 		return nil, err
 	}
 
-	_, err = p.getExpectedToken(token.Dot)
-	if err != nil {
-		return nil, err
-	}
-
-	structFieldCall, err := p.parseStructFieldCall(identStmt, terminatedTokens)
-	if err != nil {
-		return nil, err
-	}
-	assignStmt.Left = structFieldCall.(*ast.StructFieldCall)
-
-	if err = p.read(); err != nil {
-		return nil, err
-	}
-
-	_, err = p.getExpectedToken(token.Assignment)
-	if err != nil {
+	if _, err = p.getExpectedToken(token.Assignment); err != nil {
 		return nil, err
 	}
 
@@ -227,8 +232,7 @@ func (p *Parser) parseStructFieldAssignment(terminatedTokens []token.TokenType) 
 		return nil, err
 	}
 
-	_, err = p.getExpectedTokens(terminatedTokens)
-	if err != nil {
+	if _, err = p.getExpectedTokens(terminatedTokens); err != nil {
 		return nil, err
 	}
 
@@ -246,8 +250,7 @@ func (p *Parser) parseAssignment(terminatedTokens []token.TokenType) (*ast.Assig
 	if err = p.read(); err != nil {
 		return nil, err
 	}
-	_, err = p.getExpectedToken(token.Assignment)
-	if err != nil {
+	if _, err = p.getExpectedToken(token.Assignment); err != nil {
 		return nil, err
 	}
 	if err = p.read(); err != nil {
@@ -261,8 +264,7 @@ func (p *Parser) parseAssignment(terminatedTokens []token.TokenType) (*ast.Assig
 		return nil, err
 	}
 
-	_, err = p.getExpectedTokens(terminatedTokens)
-	if err != nil {
+	if _, err = p.getExpectedTokens(terminatedTokens); err != nil {
 		return nil, err
 	}
 
@@ -271,8 +273,8 @@ func (p *Parser) parseAssignment(terminatedTokens []token.TokenType) (*ast.Assig
 
 func (p *Parser) parseReturn() (*ast.Return, error) {
 	stmt := &ast.Return{Token: p.currToken}
-	err := p.read()
-	if err != nil {
+	var err error
+	if err = p.read(); err != nil {
 		return nil, err
 	}
 

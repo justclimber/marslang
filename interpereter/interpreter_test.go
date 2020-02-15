@@ -446,6 +446,7 @@ struct mech {
 m = mech{p = point{x = 1., y = 2.}}
 
 px = m.p.x
+m.p.y = 3.
 `
 	env := testExecAngGetEnv(t, input)
 
@@ -465,6 +466,9 @@ px = m.p.x
 
 	varPStructX, _ := varPStruct.Fields["x"].(*object.Float)
 	require.Equal(t, 1., varPStructX.Value)
+
+	varPStructY, _ := varPStruct.Fields["y"].(*object.Float)
+	require.Equal(t, 3., varPStructY.Value)
 
 	varPx, ok := env.Get("px")
 	require.True(t, ok)
