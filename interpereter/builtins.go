@@ -40,8 +40,8 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 			}
 		},
 	}
-	e.builtins["len"] = &object.Builtin{
-		Name:       "len",
+	e.builtins["length"] = &object.Builtin{
+		Name:       "length",
 		ReturnType: object.IntegerObj,
 		Fn: func(env *object.Environment, args ...object.Object) (object.Object, error) {
 			if len(args) != 1 {
