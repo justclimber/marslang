@@ -19,7 +19,27 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 			return &object.Void{}, nil
 		},
 	}
-
+	e.builtins["empty"] = &object.Builtin{
+		Name:       "empty",
+		ReturnType: object.BooleanObj,
+		Fn: func(env *object.Environment, args ...object.Object) (object.Object, error) {
+			if len(args) != 1 {
+				return nil, BuiltinFuncError("wrong number of arguments. got=%d, want 1", len(args))
+			}
+			switch arg := args[0].(type) {
+			case *object.Struct:
+				return &object.Boolean{Value: arg.Empty}, nil
+			case *object.Integer:
+				return &object.Boolean{Value: arg.Empty}, nil
+			case *object.Float:
+				return &object.Boolean{Value: arg.Empty}, nil
+			case *object.Array:
+				return &object.Boolean{Value: arg.Empty}, nil
+			default:
+				return nil, BuiltinFuncError("Type '%T' doesn't support emptiness")
+			}
+		},
+	}
 }
 func (e *ExecAstVisitor) AddBuiltinFunctions(builtins map[string]*object.Builtin) {
 	for k, v := range builtins {
