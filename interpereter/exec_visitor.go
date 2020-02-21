@@ -326,7 +326,10 @@ func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.En
 
 	case *object.Builtin:
 		e.execCallback(Operation{Type: Builtin, FuncName: fn.Name})
-		result, err := fn.Fn(env, args...)
+		if err := e.checkArgs(fn, args); err != nil {
+			return nil, err
+		}
+		result, err := fn.Fn(env, args)
 		if err != nil {
 			return nil, err
 		}

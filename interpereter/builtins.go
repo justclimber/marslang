@@ -3,29 +3,24 @@ package interpereter
 import (
 	"aakimov/marslang/object"
 
-	"errors"
 	"fmt"
 )
 
 func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 	e.builtins["print"] = &object.Builtin{
 		Name:       "print",
+		ArgTypes:   object.ArgTypes{"any"},
 		ReturnType: object.VoidObj,
-		Fn: func(env *object.Environment, args ...object.Object) (object.Object, error) {
-			if len(args) != 1 {
-				return nil, BuiltinFuncError("wrong number of arguments. got=%d, want 1", len(args))
-			}
+		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
 			fmt.Println(args[0].Inspect())
 			return &object.Void{}, nil
 		},
 	}
 	e.builtins["empty"] = &object.Builtin{
 		Name:       "empty",
+		ArgTypes:   object.ArgTypes{"any"},
 		ReturnType: object.BooleanObj,
-		Fn: func(env *object.Environment, args ...object.Object) (object.Object, error) {
-			if len(args) != 1 {
-				return nil, BuiltinFuncError("wrong number of arguments. got=%d, want 1", len(args))
-			}
+		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
 			switch arg := args[0].(type) {
 			case *object.Struct:
 				return &object.Boolean{Value: arg.Empty}, nil
@@ -42,37 +37,38 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 	}
 	e.builtins["length"] = &object.Builtin{
 		Name:       "length",
+		ArgTypes:   object.ArgTypes{"array"},
 		ReturnType: object.IntegerObj,
-		Fn: func(env *object.Environment, args ...object.Object) (object.Object, error) {
-			if len(args) != 1 {
-				return nil, BuiltinFuncError("wrong number of arguments. got=%d, want 1", len(args))
-			}
-			switch arg := args[0].(type) {
-			case *object.Array:
-				return &object.Integer{Value: int64(len(arg.Elements))}, nil
-			default:
-				return nil, BuiltinFuncError("Length function supports only arrays, '%T' given", arg)
-			}
+		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
+			array := args[0].(*object.Array)
+			length := len(array.Elements)
+			return &object.Integer{Value: int64(length)}, nil
 		},
 	}
 }
+
 func (e *ExecAstVisitor) AddBuiltinFunctions(builtins map[string]*object.Builtin) {
 	for k, v := range builtins {
 		e.builtins[k] = v
 	}
 }
 
-func CheckArgType(reqType object.ObjectType, arg object.Object) error {
-	if arg.Type() == reqType {
+func (e *ExecAstVisitor) checkArgs(builtin *object.Builtin, args []object.Object) error {
+	if builtin.ArgTypes == nil {
 		return nil
 	}
-	return BuiltinFuncError("wrong type of argument: want %s, got %s", reqType, arg.Type())
-}
-
-func CheckArgsType(reqType object.ObjectType, args []object.Object) error {
-	for _, arg := range args {
-		if err := CheckArgType(reqType, arg); err != nil {
-			return err
+	if len(builtin.ArgTypes) != len(args) {
+		return fmt.Errorf("wrong number of arguments for '%s'. got %d, need %d", builtin.Name, len(args), len(args))
+	}
+	for i, argType := range builtin.ArgTypes {
+		if argType == "any" {
+			continue
+		} else if argType == "array" {
+			if _, ok := args[i].(*object.Array); !ok {
+				return fmt.Errorf("wrong type of argument #%d for '%s'. got %T, need %s", i, builtin.Name, args[i], argType)
+			}
+		} else if argType != string(args[i].Type()) {
+			return fmt.Errorf("wrong type of argument #%d for '%s'. got %s, need %s", i, builtin.Name, args[i].Type(), argType)
 		}
 	}
 	return nil
@@ -80,6 +76,5 @@ func CheckArgsType(reqType object.ObjectType, args []object.Object) error {
 
 // todo line and col
 func BuiltinFuncError(format string, args ...interface{}) error {
-	msg := fmt.Sprintf(format, args...)
-	return errors.New(msg)
+	return fmt.Errorf(format, args...)
 }
