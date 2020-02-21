@@ -36,7 +36,22 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 			case *object.Array:
 				return &object.Boolean{Value: arg.Empty}, nil
 			default:
-				return nil, BuiltinFuncError("Type '%T' doesn't support emptiness")
+				return nil, BuiltinFuncError("Type '%T' doesn't support emptiness", arg)
+			}
+		},
+	}
+	e.builtins["len"] = &object.Builtin{
+		Name:       "len",
+		ReturnType: object.IntegerObj,
+		Fn: func(env *object.Environment, args ...object.Object) (object.Object, error) {
+			if len(args) != 1 {
+				return nil, BuiltinFuncError("wrong number of arguments. got=%d, want 1", len(args))
+			}
+			switch arg := args[0].(type) {
+			case *object.Array:
+				return &object.Integer{Value: int64(len(arg.Elements))}, nil
+			default:
+				return nil, BuiltinFuncError("Len function supports only arrays, '%T' given", arg)
 			}
 		},
 	}
