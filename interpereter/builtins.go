@@ -51,7 +51,7 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 			case *object.Array:
 				return &object.Integer{Value: int64(len(arg.Elements))}, nil
 			default:
-				return nil, BuiltinFuncError("Len function supports only arrays, '%T' given", arg)
+				return nil, BuiltinFuncError("Length function supports only arrays, '%T' given", arg)
 			}
 		},
 	}
