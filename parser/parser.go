@@ -74,6 +74,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 
 	p.unaryExprFunctions = make(map[token.TokenType]unaryExprFunction)
 	p.registerUnaryExprFunction(token.Minus, p.parseUnaryExpression)
+	p.registerUnaryExprFunction(token.Not, p.parseUnaryExpression)
 	p.registerUnaryExprFunction(token.NumInt, p.parseInteger)
 	p.registerUnaryExprFunction(token.NumFloat, p.parseReal)
 	p.registerUnaryExprFunction(token.True, p.parseBoolean)

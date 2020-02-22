@@ -109,7 +109,7 @@ func (l *Lexer) NextToken() (token.Token, error) {
 			currToken.Type = token.NotEq
 			l.read()
 		} else {
-			currToken.Type = token.Bang
+			currToken.Type = token.Not
 			currToken.Value = string(l.currChar)
 		}
 	case '&':

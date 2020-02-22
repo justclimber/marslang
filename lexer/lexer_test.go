@@ -56,7 +56,7 @@ c = fn(int a, int b) int {
 		{token.EOL, ""},
 		{token.Ident, "x"},
 		{token.Assignment, "="},
-		{token.Bang, "!"},
+		{token.Not, "!"},
 		{token.Ident, "y"},
 		{token.Eq, "=="},
 		{token.True, "true"},

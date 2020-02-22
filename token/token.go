@@ -26,7 +26,7 @@ const (
 	Gt    = ">"
 	Eq    = "=="
 	NotEq = "!="
-	Bang  = "!"
+	Not   = "!"
 	And   = "&&"
 	Or    = "||"
 

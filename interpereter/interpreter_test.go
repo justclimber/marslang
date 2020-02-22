@@ -156,6 +156,21 @@ b = -a
 	require.Equal(t, int64(5), varBInt.Value)
 }
 
+func TestUnaryNotOperator(t *testing.T) {
+	input := `a = 3 > 4
+b = !a
+`
+	env := testExecAngGetEnv(t, input)
+
+	varB, ok := env.Get("b")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Boolean{}, varB)
+
+	varBBool, ok := varB.(*object.Boolean)
+	require.Equal(t, true, varBBool.Value)
+}
+
 func TestQuestionAndIfemptyTrue(t *testing.T) {
 	input := `ifempty a = ?int {
 b = 5

@@ -193,9 +193,12 @@ func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *obj
 		return nil, err
 	}
 	switch node.Operator {
-	case "!":
-		// TBD
-		return nil, nil
+	case token.Not:
+		boolObj, ok := right.(*object.Boolean)
+		if !ok {
+			return nil, runtimeError(node, "Operator '!' could be applied only on bool, '%s' given", right.Type())
+		}
+		return nativeBooleanToBoolean(!boolObj.Value), nil
 	case token.Minus:
 		switch right.Type() {
 		case object.IntegerObj:
