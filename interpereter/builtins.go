@@ -58,17 +58,34 @@ func (e *ExecAstVisitor) checkArgs(builtin *object.Builtin, args []object.Object
 		return nil
 	}
 	if len(builtin.ArgTypes) != len(args) {
-		return fmt.Errorf("wrong number of arguments for '%s'. got %d, need %d", builtin.Name, len(args), len(args))
+		return fmt.Errorf(
+			"wrong number of arguments for '%s'. need %d, got %d",
+			builtin.Name,
+			len(builtin.ArgTypes),
+			len(args),
+		)
 	}
 	for i, argType := range builtin.ArgTypes {
 		if argType == "any" {
 			continue
 		} else if argType == "array" {
 			if _, ok := args[i].(*object.Array); !ok {
-				return fmt.Errorf("wrong type of argument #%d for '%s'. got %T, need %s", i, builtin.Name, args[i], argType)
+				return fmt.Errorf(
+					"wrong type of argument #%d for '%s'. need %s, got %T",
+					i+1,
+					builtin.Name,
+					argType,
+					args[i],
+				)
 			}
 		} else if argType != string(args[i].Type()) {
-			return fmt.Errorf("wrong type of argument #%d for '%s'. got %s, need %s", i, builtin.Name, args[i].Type(), argType)
+			return fmt.Errorf(
+				"wrong type of argument #%d for '%s'. need %s, got %s",
+				i+1,
+				builtin.Name,
+				argType,
+				args[i].Type(),
+			)
 		}
 	}
 	return nil
