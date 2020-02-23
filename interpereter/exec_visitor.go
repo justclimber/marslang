@@ -201,10 +201,10 @@ func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *obj
 		return nativeBooleanToBoolean(!boolObj.Value), nil
 	case token.Minus:
 		switch right.Type() {
-		case object.IntegerObj:
+		case object.TypeInt:
 			value := right.(*object.Integer).Value
 			return &object.Integer{Value: -value}, nil
-		case object.FloatObj:
+		case object.TypeFloat:
 			value := right.(*object.Float).Value
 			return &object.Float{Value: -value}, nil
 		default:
@@ -218,16 +218,16 @@ func (e *ExecAstVisitor) execUnaryExpression(node *ast.UnaryExpression, env *obj
 func (e *ExecAstVisitor) execEmptierExpression(node *ast.EmptierExpression, env *object.Environment) (object.Object, error) {
 	e.execCallback(Operation{Type: Question})
 	if node.IsArray {
-		if node.Type == object.IntegerObj || node.Type == object.FloatObj {
+		if node.Type == object.TypeInt || node.Type == object.TypeFloat {
 			return &object.Array{Emptier: object.Emptier{Empty: true}, ElementsType: node.Type}, nil
 		} else if _, ok := env.GetStructDefinition(node.Type); ok {
 			return &object.Array{Emptier: object.Emptier{Empty: true}, ElementsType: node.Type}, nil
 		} else {
 			return nil, runtimeError(node, "? is not supported on type: '%s[]'", node.Type)
 		}
-	} else if node.Type == object.IntegerObj {
+	} else if node.Type == object.TypeInt {
 		return &object.Integer{Emptier: object.Emptier{Empty: true}}, nil
-	} else if node.Type == object.FloatObj {
+	} else if node.Type == object.TypeFloat {
 		return &object.Float{Emptier: object.Emptier{Empty: true}}, nil
 	} else if def, ok := env.GetStructDefinition(node.Type); ok {
 		return &object.Struct{
@@ -317,7 +317,7 @@ func (e *ExecAstVisitor) execFunctionCall(node *ast.FunctionCall, env *object.En
 
 		if result == nil {
 			result = &object.Void{}
-		} else if result.Type() == object.ReturnValueObj {
+		} else if result.Type() == object.TypeReturnValue {
 			result = result.(*object.ReturnValue).Value
 		}
 
@@ -367,7 +367,7 @@ func (e *ExecAstVisitor) execIfStatement(node *ast.IfStatement, env *object.Envi
 	if err != nil {
 		return nil, err
 	}
-	if condition.Type() != object.BooleanObj {
+	if condition.Type() != object.TypeBool {
 		return nil, runtimeError(node, "Condition should be boolean type but %s in fact", condition.Type())
 	}
 
@@ -514,7 +514,7 @@ func (e *ExecAstVisitor) execSwitch(node *ast.Switch, env *object.Environment) (
 		if err != nil {
 			return nil, err
 		}
-		if condition.Type() != object.BooleanObj {
+		if condition.Type() != object.TypeBool {
 			return nil, runtimeError(c.Condition,
 				"Result of case condition should be 'boolean' but '%s' given", condition.Type())
 		}
@@ -524,7 +524,7 @@ func (e *ExecAstVisitor) execSwitch(node *ast.Switch, env *object.Environment) (
 			if err != nil {
 				return nil, err
 			}
-			if result != nil && result.Type() == object.ReturnValueObj {
+			if result != nil && result.Type() == object.TypeReturnValue {
 				return result, nil
 			}
 			return &object.Void{}, nil
@@ -535,7 +535,7 @@ func (e *ExecAstVisitor) execSwitch(node *ast.Switch, env *object.Environment) (
 		if err != nil {
 			return nil, err
 		}
-		if result != nil && result.Type() == object.ReturnValueObj {
+		if result != nil && result.Type() == object.TypeReturnValue {
 			return result, nil
 		}
 	}

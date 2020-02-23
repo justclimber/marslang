@@ -7,17 +7,17 @@ import (
 )
 
 func execScalarBinOperation(left, right object.Object, operator string) (object.Object, error) {
-	if left.Type() == object.IntegerObj {
+	if left.Type() == object.TypeInt {
 		left, _ := left.(*object.Integer)
 		right, _ := right.(*object.Integer)
 		result, err := integerBinOperation(left, right, operator)
 		return result, err
-	} else if left.Type() == object.FloatObj {
+	} else if left.Type() == object.TypeFloat {
 		left, _ := left.(*object.Float)
 		right, _ := right.(*object.Float)
 		result, err := floatBinOperation(left, right, operator)
 		return result, err
-	} else if left.Type() == object.BooleanObj {
+	} else if left.Type() == object.TypeBool {
 		left, _ := left.(*object.Boolean)
 		right, _ := right.(*object.Boolean)
 		result, err := booleanBinOperation(left, right, operator)

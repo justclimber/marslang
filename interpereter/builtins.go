@@ -10,7 +10,7 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 	e.builtins["print"] = &object.Builtin{
 		Name:       "print",
 		ArgTypes:   object.ArgTypes{"any"},
-		ReturnType: object.VoidObj,
+		ReturnType: object.TypeVoid,
 		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
 			fmt.Println(args[0].Inspect())
 			return &object.Void{}, nil
@@ -19,7 +19,7 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 	e.builtins["empty"] = &object.Builtin{
 		Name:       "empty",
 		ArgTypes:   object.ArgTypes{"any"},
-		ReturnType: object.BooleanObj,
+		ReturnType: object.TypeBool,
 		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
 			switch arg := args[0].(type) {
 			case *object.Struct:
@@ -38,7 +38,7 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 	e.builtins["length"] = &object.Builtin{
 		Name:       "length",
 		ArgTypes:   object.ArgTypes{"array"},
-		ReturnType: object.IntegerObj,
+		ReturnType: object.TypeInt,
 		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
 			array := args[0].(*object.Array)
 			length := len(array.Elements)

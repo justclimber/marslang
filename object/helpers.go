@@ -62,11 +62,11 @@ func (e *Environment) LoadVarsInStruct(definition *StructDefinition, s map[strin
 func getLangType(t interface{}) string {
 	switch t.(type) {
 	case float64:
-		return FloatObj
+		return TypeFloat
 	case int:
-		return IntegerObj
+		return TypeInt
 	case bool:
-		return BooleanObj
+		return TypeBool
 	default:
 		log.Fatalf("Unsupported type for struct creation: '%T'", t)
 	}

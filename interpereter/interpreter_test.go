@@ -216,9 +216,9 @@ pts = ?point[]
 	env := testExecAngGetEnv(t, input)
 
 	for _, toTest := range []expectedVarInEnv{
-		{"a", "int", object.IntegerObj, false},
-		{"b", "float", object.FloatObj, false},
-		{"c", "int[]", object.IntegerObj, true},
+		{"a", "int", object.TypeInt, false},
+		{"b", "float", object.TypeFloat, false},
+		{"c", "int[]", object.TypeInt, true},
 		{"p", "point", "struct", false},
 		{"pts", "point[]", "point", true},
 	} {
@@ -230,11 +230,11 @@ pts = ?point[]
 			require.True(t, ok, "var %s internal type mismatch", toTest.name)
 			require.Equal(t, string(toTest.typeCast), typeCasted.ElementsType, "var %s array elements type mismatch", toTest.name)
 			require.True(t, typeCasted.Empty)
-		} else if toTest.typeCast == object.IntegerObj {
+		} else if toTest.typeCast == object.TypeInt {
 			typeCasted, ok := varToTest.(*object.Integer)
 			require.True(t, ok, "var %s internal type mismatch", toTest.name)
 			require.True(t, typeCasted.Empty)
-		} else if toTest.typeCast == object.FloatObj {
+		} else if toTest.typeCast == object.TypeFloat {
 			typeCasted, ok := varToTest.(*object.Float)
 			require.True(t, ok, "var %s internal type mismatch", toTest.name)
 			require.True(t, typeCasted.Empty)

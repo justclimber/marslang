@@ -10,13 +10,13 @@ import (
 type ObjectType string
 
 const (
-	IntegerObj     = "int"
-	FloatObj       = "float"
-	BooleanObj     = "bool"
-	ReturnValueObj = "return_value"
-	FunctionObj    = "function_obj"
-	BuiltinFnObj   = "builtin_fn_obj"
-	VoidObj        = "void"
+	TypeInt         = "int"
+	TypeFloat       = "float"
+	TypeBool        = "bool"
+	TypeReturnValue = "return_value"
+	TypeFunction    = "function_obj"
+	TypeBuiltinFn   = "builtin_fn_obj"
+	TypeVoid        = "void"
 )
 
 type Object interface {
@@ -51,7 +51,7 @@ type Integer struct {
 	Value int64
 }
 
-func (i *Integer) Type() ObjectType { return IntegerObj }
+func (i *Integer) Type() ObjectType { return TypeInt }
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 
 type Float struct {
@@ -59,14 +59,14 @@ type Float struct {
 	Value float64
 }
 
-func (f *Float) Type() ObjectType { return FloatObj }
+func (f *Float) Type() ObjectType { return TypeFloat }
 func (f *Float) Inspect() string  { return fmt.Sprintf("%.2f", f.Value) }
 
 type Boolean struct {
 	Value bool
 }
 
-func (b *Boolean) Type() ObjectType { return BooleanObj }
+func (b *Boolean) Type() ObjectType { return TypeBool }
 func (b *Boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
 
 type Array struct {
@@ -99,7 +99,7 @@ type ReturnValue struct {
 	Value Object
 }
 
-func (rv *ReturnValue) Type() ObjectType { return ReturnValueObj }
+func (rv *ReturnValue) Type() ObjectType { return TypeReturnValue }
 func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
 
 type Function struct {
@@ -109,7 +109,7 @@ type Function struct {
 	Env        *Environment
 }
 
-func (f *Function) Type() ObjectType { return FunctionObj }
+func (f *Function) Type() ObjectType { return TypeFunction }
 func (f *Function) Inspect() string {
 	return "function"
 }
@@ -148,10 +148,10 @@ type Builtin struct {
 	ReturnType string
 }
 
-func (b *Builtin) Type() ObjectType { return BuiltinFnObj }
+func (b *Builtin) Type() ObjectType { return TypeBuiltinFn }
 func (b *Builtin) Inspect() string  { return "builtin function" }
 
 type Void struct{}
 
-func (v *Void) Type() ObjectType { return VoidObj }
+func (v *Void) Type() ObjectType { return TypeVoid }
 func (v *Void) Inspect() string  { return "void" }
