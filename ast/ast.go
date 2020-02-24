@@ -120,6 +120,12 @@ type IfEmptyStatement struct {
 	EmptyBranch *StatementsBlock
 }
 
+type EnumDefinition struct {
+	Token    token.Token
+	Name     string
+	Elements []string
+}
+
 type StructDefinition struct {
 	Token  token.Token
 	Name   string

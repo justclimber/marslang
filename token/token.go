@@ -44,6 +44,7 @@ const (
 
 	// keywords
 	Struct   = "struct"
+	Enum     = "enum"
 	Function = "fn"
 	Return   = "return"
 	True     = "true"
@@ -80,6 +81,7 @@ var keywords = map[string]TokenType{
 	"if":      If,
 	"else":    Else,
 	"struct":  Struct,
+	"enum":    Enum,
 	"switch":  Switch,
 	"case":    Case,
 	"default": Default,

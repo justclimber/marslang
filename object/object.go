@@ -13,6 +13,7 @@ const (
 	TypeInt         = "int"
 	TypeFloat       = "float"
 	TypeBool        = "bool"
+	TypeEnum        = "enum"
 	TypeReturnValue = "return_value"
 	TypeFunction    = "function_obj"
 	TypeBuiltinFn   = "builtin_fn_obj"
@@ -33,6 +34,11 @@ func (e *Emptier) IsEmpty() bool { return e.Empty }
 type StructDefinition struct {
 	Name   string
 	Fields map[string]string
+}
+
+type EnumDefinition struct {
+	Name     string
+	Elements []string
 }
 
 func CreateVarDefinitionsFromVarType(varTypes map[string]*ast.VarAndType) map[string]string {
@@ -68,6 +74,14 @@ type Boolean struct {
 
 func (b *Boolean) Type() ObjectType { return TypeBool }
 func (b *Boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
+
+type Enum struct {
+	Definition *EnumDefinition
+	Value      int8
+}
+
+func (e *Enum) Type() ObjectType { return TypeEnum }
+func (e *Enum) Inspect() string  { return fmt.Sprintf("%d", e.Value) }
 
 type Array struct {
 	Emptier

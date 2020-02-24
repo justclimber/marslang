@@ -51,6 +51,20 @@ func TestOr(t *testing.T) {
 	require.Equal(t, true, varABool.Value)
 }
 
+func TestEnum(t *testing.T) {
+	input := `enum Colors {red, green, blue}
+a = Colors:red`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Boolean{}, varA)
+
+	varABool, ok := varA.(*object.Boolean)
+	require.Equal(t, true, varABool.Value)
+}
+
 func TestFunctionCallWith2Args(t *testing.T) {
 	input := `a = fn(int x, int y) int {
    return x + y

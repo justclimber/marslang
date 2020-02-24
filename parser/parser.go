@@ -100,6 +100,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerBinExprFunction(token.LBracket, p.parseArrayIndexCall)
 	p.registerBinExprFunction(token.LBrace, p.parseStructExpression)
 	p.registerBinExprFunction(token.Dot, p.parseStructFieldCall)
+	p.registerBinExprFunction(token.Colon, p.parseEnumExpression)
 
 	return p, nil
 }
@@ -176,6 +177,8 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 		return p.parseIfEmptyStatement()
 	case token.Struct:
 		return p.parseStructDefinition()
+	case token.Enum:
+		return p.parseEnumDefinition()
 	case token.Switch:
 		return p.parseSwitchStatement()
 	case token.EOL:
@@ -886,6 +889,48 @@ func (p *Parser) parseStructFieldCall(expr ast.IExpression, terminatedTokens []t
 	node.Field = field
 
 	return node, nil
+}
+
+func (p *Parser) parseEnumDefinition() (ast.IExpression, error) {
+	node := &ast.EnumDefinition{Token: p.currToken}
+
+	if err := p.read(); err != nil {
+		return nil, err
+	}
+	name, err := p.getExpectedToken(token.Ident)
+	if err != nil {
+		return nil, err
+	}
+	node.Name = name.Value
+
+	if err := p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
+		return nil, err
+	}
+
+	if err := p.read(); err != nil {
+		return nil, err
+	}
+
+	fields, err := p.parseVarAndTypes(token.RBrace, token.EOL)
+	if err != nil {
+		return nil, err
+	}
+	if len(fields) == 0 {
+		return nil, p.parseError("Struct should contain at least 1 field")
+	}
+
+	fieldsMap := make(map[string]*ast.VarAndType)
+	for _, field := range fields {
+		fieldsMap[field.Var.Value] = field
+	}
+
+	node.Fields = fieldsMap
+
+	return node, nil
+}
+
+func (p *Parser) parseEnumExpression(node ast.IExpression, terminatedTokens []token.TokenType) (ast.IExpression, error) {
+	return nil, nil
 }
 
 func (p *Parser) nextPrecedence() int {
