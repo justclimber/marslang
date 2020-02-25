@@ -23,6 +23,17 @@ func registerStructDefinition(node *ast.StructDefinition, env *object.Environmen
 	return nil
 }
 
+func registerEnumDefinition(node *ast.EnumDefinition, env *object.Environment) error {
+	ed := &object.EnumDefinition{
+		Name:     node.Name,
+		Elements: node.Elements,
+	}
+	if err := env.RegisterEnumDefinition(ed); err != nil {
+		return err
+	}
+	return nil
+}
+
 func structTypeAndVarsChecks(n *ast.Assignment, definition *object.StructDefinition, result object.Object) error {
 	fieldType, ok := definition.Fields[n.Left.Value]
 	if !ok {

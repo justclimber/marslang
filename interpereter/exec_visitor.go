@@ -31,6 +31,7 @@ const (
 	Identifier
 	Function
 	FunctionCall
+	EnumElementCall
 	Builtin
 )
 
@@ -100,6 +101,11 @@ func (e *ExecAstVisitor) execStatement(node ast.IStatement, env *object.Environm
 			return nil, err
 		}
 		return nil, nil
+	case *ast.EnumDefinition:
+		if err := registerEnumDefinition(astNode, env); err != nil {
+			return nil, err
+		}
+		return nil, nil
 	default:
 		return nil, runtimeError(node, "Unexpected node for statement: %T", node)
 	}
@@ -117,6 +123,8 @@ func (e *ExecAstVisitor) execExpression(node ast.IExpression, env *object.Enviro
 		return e.execStruct(astNode, env)
 	case *ast.StructFieldCall:
 		return e.execStructFieldCall(astNode, env)
+	case *ast.EnumElementCall:
+		return e.execEnumElementCall(astNode, env)
 	case *ast.NumInt:
 		return e.execNumInt(astNode, env)
 	case *ast.NumFloat:
@@ -262,12 +270,16 @@ func (e *ExecAstVisitor) execBinExpression(node *ast.BinExpression, env *object.
 
 func (e *ExecAstVisitor) execIdentifier(node *ast.Identifier, env *object.Environment) (object.Object, error) {
 	e.execCallback(Operation{Type: Identifier})
-	if val, ok := env.Get(node.Value); ok {
-		return val, nil
-	}
-
 	if builtin, ok := e.builtins[node.Value]; ok {
 		return builtin, nil
+	}
+
+	if ed, ok := env.GetEnumDefinition(node.Value); ok {
+		return &object.Enum{Definition: ed}, nil
+	}
+
+	if val, ok := env.Get(node.Value); ok {
+		return val, nil
 	}
 
 	return nil, runtimeError(node, "identifier not found: "+node.Value)
@@ -505,6 +517,34 @@ func (e *ExecAstVisitor) execStructFieldCall(node *ast.StructFieldCall, env *obj
 	}
 
 	return fieldObj, nil
+}
+
+func (e *ExecAstVisitor) execEnumElementCall(node *ast.EnumElementCall, env *object.Environment) (object.Object, error) {
+	e.execCallback(Operation{Type: EnumElementCall})
+	left, err := e.execExpression(node.EnumExpr, env)
+	if err != nil {
+		return nil, err
+	}
+
+	enumObj, ok := left.(*object.Enum)
+	if !ok {
+		return nil, runtimeError(node, "Expected enum, got '%s'", left.Type())
+	}
+
+	found := false
+	for value, str := range enumObj.Definition.Elements {
+		if node.Element.Value == str {
+			found = true
+			enumObj.Value = int8(value)
+			break
+		}
+	}
+	if !found {
+		return nil, runtimeError(node,
+			"Enum '%s' doesn't have element '%s'", enumObj.Definition.Name, node.Element.Value)
+	}
+
+	return enumObj, nil
 }
 
 func (e *ExecAstVisitor) execSwitch(node *ast.Switch, env *object.Environment) (object.Object, error) {

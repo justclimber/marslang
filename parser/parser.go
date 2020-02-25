@@ -40,6 +40,7 @@ var precedences = map[token.TokenType]int{
 	token.LBracket:   Index,
 	token.LBrace:     Index,
 	token.Dot:        Index,
+	token.Colon:      Index,
 }
 
 type (
@@ -903,7 +904,7 @@ func (p *Parser) parseEnumDefinition() (ast.IExpression, error) {
 	}
 	node.Name = name.Value
 
-	if err := p.requireTokenSequence([]token.TokenType{token.LBrace, token.EOL}); err != nil {
+	if err := p.requireTokenSequence([]token.TokenType{token.LBrace}); err != nil {
 		return nil, err
 	}
 
@@ -911,26 +912,58 @@ func (p *Parser) parseEnumDefinition() (ast.IExpression, error) {
 		return nil, err
 	}
 
-	fields, err := p.parseVarAndTypes(token.RBrace, token.EOL)
-	if err != nil {
+	if p.currToken.Type == token.EOL {
+		if err := p.read(); err != nil {
+			return nil, err
+		}
+	}
+
+	node.Elements = make([]string, 0)
+	for p.nextToken.Type != token.RBrace {
+		el, err := p.getExpectedToken(token.Ident)
+		if err != nil {
+			return nil, err
+		}
+		node.Elements = append(node.Elements, el.Value)
+		if err := p.read(); err != nil {
+			return nil, err
+		}
+
+		if p.currToken.Type == token.Comma {
+			if err := p.read(); err != nil {
+				return nil, err
+			}
+		}
+
+		if p.currToken.Type == token.EOL {
+			if err := p.read(); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err := p.read(); err != nil {
 		return nil, err
 	}
-	if len(fields) == 0 {
-		return nil, p.parseError("Struct should contain at least 1 field")
-	}
-
-	fieldsMap := make(map[string]*ast.VarAndType)
-	for _, field := range fields {
-		fieldsMap[field.Var.Value] = field
-	}
-
-	node.Fields = fieldsMap
 
 	return node, nil
 }
 
-func (p *Parser) parseEnumExpression(node ast.IExpression, terminatedTokens []token.TokenType) (ast.IExpression, error) {
-	return nil, nil
+func (p *Parser) parseEnumExpression(expr ast.IExpression, terminatedTokens []token.TokenType) (ast.IExpression, error) {
+	node := &ast.EnumElementCall{
+		Token:    p.currToken,
+		EnumExpr: expr,
+	}
+	if err := p.read(); err != nil {
+		return nil, err
+	}
+	el, err := p.parseIdentifier(terminatedTokens)
+	if err != nil {
+		return nil, err
+	}
+
+	node.Element = el
+	return node, nil
 }
 
 func (p *Parser) nextPrecedence() int {

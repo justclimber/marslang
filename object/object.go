@@ -13,7 +13,6 @@ const (
 	TypeInt         = "int"
 	TypeFloat       = "float"
 	TypeBool        = "bool"
-	TypeEnum        = "enum"
 	TypeReturnValue = "return_value"
 	TypeFunction    = "function_obj"
 	TypeBuiltinFn   = "builtin_fn_obj"
@@ -80,8 +79,10 @@ type Enum struct {
 	Value      int8
 }
 
-func (e *Enum) Type() ObjectType { return TypeEnum }
-func (e *Enum) Inspect() string  { return fmt.Sprintf("%d", e.Value) }
+func (e *Enum) Type() ObjectType { return ObjectType(e.Definition.Name) }
+func (e *Enum) Inspect() string {
+	return fmt.Sprintf("%s", e.Definition.Elements[e.Value])
+}
 
 type Array struct {
 	Emptier

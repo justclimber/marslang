@@ -126,6 +126,12 @@ type EnumDefinition struct {
 	Elements []string
 }
 
+type EnumElementCall struct {
+	Token    token.Token
+	EnumExpr IExpression
+	Element  *Identifier
+}
+
 type StructDefinition struct {
 	Token  token.Token
 	Name   string
@@ -176,6 +182,8 @@ func (node *IfEmptyStatement) GetToken() token.Token      { return node.Token }
 func (node *StructDefinition) GetToken() token.Token      { return node.Token }
 func (node *Struct) GetToken() token.Token                { return node.Token }
 func (node *StructFieldCall) GetToken() token.Token       { return node.Token }
+func (node *EnumDefinition) GetToken() token.Token        { return node.Token }
+func (node *EnumElementCall) GetToken() token.Token       { return node.Token }
 func (node *Case) GetToken() token.Token                  { return node.Token }
 func (node *Switch) GetToken() token.Token                { return node.Token }
 func (node *EmptierExpression) GetToken() token.Token     { return node.Token }
