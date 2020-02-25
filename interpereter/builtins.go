@@ -2,13 +2,27 @@ package interpereter
 
 import (
 	"aakimov/marslang/object"
+	"math"
 
 	"fmt"
 )
 
+func AbsInt64(n int64) int64 {
+	y := n >> 63
+	return (n ^ y) - y
+}
+
+const (
+	BuiltinPrint    = "print"
+	BuiltinEmpty    = "empty"
+	BuiltinLength   = "length"
+	BuiltinAbsInt   = "absInt"
+	BuiltinAbsFloat = "absFloat"
+)
+
 func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
-	e.builtins["print"] = &object.Builtin{
-		Name:       "print",
+	e.builtins[BuiltinPrint] = &object.Builtin{
+		Name:       BuiltinPrint,
 		ArgTypes:   object.ArgTypes{"any"},
 		ReturnType: object.TypeVoid,
 		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
@@ -16,8 +30,8 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 			return &object.Void{}, nil
 		},
 	}
-	e.builtins["empty"] = &object.Builtin{
-		Name:       "empty",
+	e.builtins[BuiltinEmpty] = &object.Builtin{
+		Name:       BuiltinEmpty,
 		ArgTypes:   object.ArgTypes{"any"},
 		ReturnType: object.TypeBool,
 		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
@@ -35,14 +49,32 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 			}
 		},
 	}
-	e.builtins["length"] = &object.Builtin{
-		Name:       "length",
+	e.builtins[BuiltinLength] = &object.Builtin{
+		Name:       BuiltinLength,
 		ArgTypes:   object.ArgTypes{"array"},
 		ReturnType: object.TypeInt,
 		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
 			array := args[0].(*object.Array)
 			length := len(array.Elements)
 			return &object.Integer{Value: int64(length)}, nil
+		},
+	}
+	e.builtins[BuiltinAbsInt] = &object.Builtin{
+		Name:       BuiltinAbsInt,
+		ArgTypes:   object.ArgTypes{object.TypeInt},
+		ReturnType: object.TypeInt,
+		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
+			int := args[0].(*object.Integer).Value
+			return &object.Integer{Value: AbsInt64(int)}, nil
+		},
+	}
+	e.builtins[BuiltinAbsFloat] = &object.Builtin{
+		Name:       BuiltinAbsFloat,
+		ArgTypes:   object.ArgTypes{object.TypeFloat},
+		ReturnType: object.TypeFloat,
+		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
+			float := args[0].(*object.Float).Value
+			return &object.Float{Value: math.Abs(float)}, nil
 		},
 	}
 }
