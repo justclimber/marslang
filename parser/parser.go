@@ -389,17 +389,22 @@ func (p *Parser) parseEmptierExpression(terminatedTokens []token.TokenType) (ast
 		return nil, err
 	}
 
-	if p.currToken.Type == token.Ident || p.currToken.Type == token.Type {
-		node.Type = p.currToken.Value
-		if p.nextToken.Type == "[" {
-			if err := p.requireTokenSequence([]token.TokenType{token.LBracket, token.RBracket}); err != nil {
-				return nil, err
-			}
-			node.IsArray = true
-		}
-		return node, nil
+	_, err := p.getExpectedTokens([]token.TokenType{token.LBracket, token.Type, token.Ident})
+	if err != nil {
+		return nil, err
 	}
-	return nil, p.parseError("type expected after '?', '%s' found", p.currToken.Type)
+	if p.currToken.Type == token.LBracket {
+		if err := p.requireTokenSequence([]token.TokenType{token.RBracket}); err != nil {
+			return nil, err
+		}
+		node.IsArray = true
+		if err := p.read(); err != nil {
+			return nil, err
+		}
+	}
+
+	node.Type = p.currToken.Value
+	return node, nil
 }
 
 func (p *Parser) parseReal(terminatedTokens []token.TokenType) (ast.IExpression, error) {
@@ -681,11 +686,19 @@ func (p *Parser) parseVarAndTypes(endToken token.TokenType, delimiterToken token
 	var err error
 	vars := make([]*ast.VarAndType, 0)
 
-	for p.currTokenIn([]token.TokenType{token.Type, token.Ident}) {
-		argument := &ast.VarAndType{
-			Token:   p.currToken,
-			VarType: p.currToken.Value,
+	for p.currTokenIn([]token.TokenType{token.LBracket, token.Type, token.Ident}) {
+		argument := &ast.VarAndType{Token: p.currToken}
+		arrayTypePrefix := ""
+		if p.currToken.Type == token.LBracket {
+			if err := p.requireTokenSequence([]token.TokenType{token.RBracket}); err != nil {
+				return nil, err
+			}
+			arrayTypePrefix = "[]"
+			if err = p.read(); err != nil {
+				return nil, err
+			}
 		}
+		argument.VarType = arrayTypePrefix + p.currToken.Value
 
 		if err = p.read(); err != nil {
 			return nil, err

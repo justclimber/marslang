@@ -91,23 +91,16 @@ type Array struct {
 }
 
 func (a *Array) Type() ObjectType {
-	varType := fmt.Sprintf("%s[]", a.ElementsType)
+	varType := fmt.Sprintf("[]%s", a.ElementsType)
 	return ObjectType(varType)
 }
 func (a *Array) Inspect() string {
-	var out bytes.Buffer
-
 	var elements []string
 	for _, e := range a.Elements {
 		elements = append(elements, e.Inspect())
 	}
 
-	out.WriteString(a.ElementsType)
-	out.WriteString("[]{")
-	out.WriteString(strings.Join(elements, ", "))
-	out.WriteString("}")
-
-	return out.String()
+	return fmt.Sprintf("[]%s{%s}", a.ElementsType, strings.Join(elements, ", "))
 }
 
 type ReturnValue struct {

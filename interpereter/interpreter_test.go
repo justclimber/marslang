@@ -81,6 +81,27 @@ b = f(Colors:blue)
 	require.Equal(t, false, varBBool.Value)
 }
 
+func TestEnumArray(t *testing.T) {
+	input := `enum Colors {red, green, blue}
+f = fn([]Colors c) bool {
+   if c[0] == Colors:red {
+      return true
+   }
+   return false
+}
+b = f([]Colors{Colors:blue, Colors:green})
+`
+	env := testExecAngGetEnv(t, input)
+
+	varB, ok := env.Get("b")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Boolean{}, varB)
+
+	varBBool, ok := varB.(*object.Boolean)
+	require.Equal(t, false, varBBool.Value)
+}
+
 func TestEnumAsReturnType(t *testing.T) {
 	input := `enum Colors {red, green, blue}
 f = fn() Colors {
@@ -253,22 +274,22 @@ type expectedVarInEnv struct {
 func TestEmptier(t *testing.T) {
 	input := `a = ?int
 b = ?float
-c = ?int[]
+c = ?[]int
 struct point {
 int x
 int y
 }
 p = ?point
-pts = ?point[]
+pts = ?[]point
 `
 	env := testExecAngGetEnv(t, input)
 
 	for _, toTest := range []expectedVarInEnv{
 		{"a", "int", object.TypeInt, false},
 		{"b", "float", object.TypeFloat, false},
-		{"c", "int[]", object.TypeInt, true},
+		{"c", "[]int", object.TypeInt, true},
 		{"p", "point", "struct", false},
-		{"pts", "point[]", "point", true},
+		{"pts", "[]point", "point", true},
 	} {
 		varToTest, ok := env.Get(toTest.name)
 		require.True(t, ok, "var %s not exist", toTest.name)
@@ -402,7 +423,7 @@ a = []point{point{x = 1., y = 2.}, point{x = 2., y = 3.}}
 	varAArray, _ := varA.(*object.Array)
 	require.Len(t, varAArray.Elements, 2)
 	require.Equal(t, "point", varAArray.ElementsType)
-	require.Equal(t, "point[]", string(varAArray.Type()))
+	require.Equal(t, "[]point", string(varAArray.Type()))
 	require.IsType(t, &object.Struct{}, varAArray.Elements[0])
 
 	el0, ok := varAArray.Elements[0].(*object.Struct)
