@@ -81,6 +81,24 @@ b = f(Colors:blue)
 	require.Equal(t, false, varBBool.Value)
 }
 
+func TestEnumAsReturnType(t *testing.T) {
+	input := `enum Colors {red, green, blue}
+f = fn() Colors {
+   return Colors:green
+}
+a = f()
+`
+	env := testExecAngGetEnv(t, input)
+
+	varA, ok := env.Get("a")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Enum{}, varA)
+
+	varAEnum, ok := varA.(*object.Enum)
+	require.Equal(t, int8(1), varAEnum.Value)
+}
+
 func TestFunctionCallWith2Args(t *testing.T) {
 	input := `a = fn(int x, int y) int {
    return x + y
