@@ -83,7 +83,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerUnaryExprFunction(token.Ident, p.parseIdentifierAsExpression)
 	p.registerUnaryExprFunction(token.LParen, p.parseGroupedExpression)
 	p.registerUnaryExprFunction(token.Function, p.parseFunction)
-	p.registerUnaryExprFunction(token.Type, p.parseArray)
+	p.registerUnaryExprFunction(token.LBracket, p.parseArray)
 	p.registerUnaryExprFunction(token.Question, p.parseEmptierExpression)
 
 	p.binExprFunctions = make(map[token.TokenType]binExprFunctions)
@@ -782,15 +782,23 @@ func (p *Parser) parseBoolean(terminatedTokens []token.TokenType) (ast.IExpressi
 }
 
 func (p *Parser) parseArray(terminatedTokens []token.TokenType) (ast.IExpression, error) {
-	node := &ast.Array{
-		Token:        p.currToken,
-		ElementsType: p.currToken.Value,
-	}
+	node := &ast.Array{Token: p.currToken}
 
 	var err error
-	if err = p.requireTokenSequence([]token.TokenType{token.LBracket, token.RBracket}); err != nil {
+	if err = p.requireTokenSequence([]token.TokenType{token.RBracket}); err != nil {
 		return nil, err
 	}
+
+	if err = p.read(); err != nil {
+		return nil, err
+	}
+
+	arrayTypeToken, err := p.getExpectedTokens([]token.TokenType{token.Ident, token.Type})
+	if err != nil {
+		return nil, err
+	}
+
+	node.ElementsType = arrayTypeToken.Value
 
 	if err = p.read(); err != nil {
 		return nil, err
@@ -813,10 +821,6 @@ func (p *Parser) parseArray(terminatedTokens []token.TokenType) (ast.IExpression
 }
 
 func (p *Parser) parseArrayIndexCall(array ast.IExpression, terminatedTokens []token.TokenType) (ast.IExpression, error) {
-	if p.nextToken.Type == token.RBracket {
-		p.back()
-		return p.parseArray(terminatedTokens)
-	}
 	node := &ast.ArrayIndexCall{
 		Token: p.currToken,
 		Left:  array,

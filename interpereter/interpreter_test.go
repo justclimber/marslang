@@ -348,7 +348,7 @@ func TestExecIfStatementWithElseBranch(t *testing.T) {
 }
 
 func TestArrayOfInt(t *testing.T) {
-	input := `a = int[]{1, 2, 3}
+	input := `a = []int{1, 2, 3}
 b = a[1]
 `
 	env := testExecAngGetEnv(t, input)
@@ -367,7 +367,7 @@ b = a[1]
 }
 
 func TestArrayOfFloat(t *testing.T) {
-	input := `a = float[]{1., 2., 3.3}
+	input := `a = []float{1., 2., 3.3}
 b = a[2]
 `
 	env := testExecAngGetEnv(t, input)
@@ -390,7 +390,7 @@ func TestArrayOfStruct(t *testing.T) {
    float x
    float y
 }
-a = point[]{point{x = 1., y = 2.}, point{x = 2., y = 3.}}
+a = []point{point{x = 1., y = 2.}, point{x = 2., y = 3.}}
 `
 	env := testExecAngGetEnv(t, input)
 
@@ -590,7 +590,7 @@ p = point{x = 1.}
 }
 
 func TestArrayMixedTypeNegative(t *testing.T) {
-	input := `a = int[]{1, 2.1, 3}
+	input := `a = []int{1, 2.1, 3}
 b = a[1]
 `
 	l := lexer.New(input)
