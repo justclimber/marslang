@@ -82,7 +82,7 @@ if toShoot < 70. {
 пример чуть посложнее:
 ```
 ifempty xelon = getFirstTarget(1) {
-   ifempty xelon = nearestByType(mech, objects, 3) {
+   ifempty xelon = nearestByType(mech, objects, ObjectTypes:xelon) {
       return 1
    }
    addTarget(xelon, 1)
@@ -93,7 +93,7 @@ commands.rotate = keepBounds(angleTo, 1.)
 commands.move = 1. - commands.rotate
 
 ifempty obj = getFirstTarget(2) {   
-   ifempty obj = nearestByType(mech, objects, 2) {
+   ifempty obj = nearestByType(mech, objects, ObjectTypes:rock) {
       return 1
    }
    addTarget(obj, 2)
@@ -111,7 +111,6 @@ dist = distance(mech.x, mech.y, obj.x, obj.y)
 toShoot = cAngleTo * cAngleTo * dist
 if toShoot < 40. {
    commands.cannon.shoot = 0.1
-   return 1
 }
 
 ```
