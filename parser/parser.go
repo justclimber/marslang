@@ -919,7 +919,7 @@ func (p *Parser) parseEnumDefinition() (ast.IExpression, error) {
 	}
 
 	node.Elements = make([]string, 0)
-	for p.nextToken.Type != token.RBrace {
+	for p.currToken.Type != token.RBrace {
 		el, err := p.getExpectedToken(token.Ident)
 		if err != nil {
 			return nil, err

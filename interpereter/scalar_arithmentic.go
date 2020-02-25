@@ -23,7 +23,15 @@ func execScalarBinOperation(left, right object.Object, operator string) (object.
 		result, err := booleanBinOperation(left, right, operator)
 		return result, err
 	}
-	return nil, nil
+	if _, ok := left.(*object.Enum); ok {
+		if operator != token.Eq {
+			return nil, fmt.Errorf("unsupported operator '%s' for type: '%s'", operator, left.Type())
+		}
+		left := left.(*object.Enum).Value
+		right := right.(*object.Enum).Value
+		return nativeBooleanToBoolean(left == right), nil
+	}
+	return nil, fmt.Errorf("unsupported operator '%s' for type: '%s'", operator, left.Type())
 }
 
 func integerBinOperation(left, right *object.Integer, operator string) (object.Object, error) {
