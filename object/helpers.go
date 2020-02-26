@@ -65,6 +65,8 @@ func getLangType(t interface{}) string {
 		return TypeFloat
 	case int:
 		return TypeInt
+	case int32:
+		return TypeInt
 	case bool:
 		return TypeBool
 	default:
@@ -74,16 +76,15 @@ func getLangType(t interface{}) string {
 }
 
 func getLangObject(t interface{}) Object {
-	switch t.(type) {
+	switch tt := t.(type) {
 	case float64:
-		v, _ := t.(float64)
-		return &Float{Value: v}
+		return &Float{Value: tt}
 	case int:
-		v, _ := t.(int)
-		return &Integer{Value: int64(v)}
+		return &Integer{Value: int64(tt)}
+	case int32:
+		return &Integer{Value: int64(tt)}
 	case bool:
-		v, _ := t.(bool)
-		return &Boolean{Value: v}
+		return &Boolean{Value: tt}
 	default:
 		log.Fatalf("Unsupported type for struct creation: '%T'", t)
 	}
