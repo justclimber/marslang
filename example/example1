@@ -23,19 +23,19 @@ px = m.p.x
 a = 10
 
 switch {
-case a < 20:
+case a < 20
    r1 = 1
-case a == 0:
+case a == 0
    r1 = 3
-default: // this is also comment
+default // this is also comment
    r1 = 5
 }
 
 switch a {
-case < 20:
+case < 20
    r2 = 1
-case == 0:
+case == 0
    r2 = 3
-default:
+default
    r1 = 5
 }
