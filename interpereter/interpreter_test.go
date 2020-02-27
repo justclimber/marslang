@@ -6,6 +6,7 @@ import (
 	"aakimov/marslang/parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"log"
 	"testing"
 )
 
@@ -728,20 +729,7 @@ func testExecAngGetEnv(t *testing.T, input string) *object.Environment {
 	return env
 }
 
-func BenchmarkExecFull(b *testing.B) {
-	input := `a = int[]{1, 2.1, 3}
-b = a[1]
-`
-	for i := 0; i < b.N; i++ {
-		l := lexer.New(input)
-		p, _ := parser.New(l)
-		env := object.NewEnvironment()
-		astProgram, _ := p.Parse()
-		_ = NewExecAstVisitor().ExecAst(astProgram, env)
-	}
-}
-func BenchmarkExecOnlyAst(b *testing.B) {
-	input := `sum = fn(int x, int y) int {
+const codeToBench = `sum = fn(int x, int y) int {
    return x + y
 }
 a = sum(2, 5)
@@ -751,6 +739,16 @@ if c > 8 {
 } else {
     bb = 2
 }
+switch bb {
+case == 1
+   f = 2.
+case == 2
+   f = 3.
+}
+
+enum Colors {red, green, blue}
+col = Colors:green
+
 struct point {
    float x
    float y
@@ -762,12 +760,48 @@ m = mech{p = point{x = 1., y = 2.}}
 
 px = m.p.x
 `
+
+func BenchmarkExecFull(b *testing.B) {
+	input := codeToBench
+	for i := 0; i < b.N; i++ {
+		l := lexer.New(input)
+		p, _ := parser.New(l)
+		env := object.NewEnvironment()
+		astProgram, err := p.Parse()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		err = NewExecAstVisitor().ExecAst(astProgram, env)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+}
+
+func BenchmarkParse(b *testing.B) {
+	input := codeToBench
+	for i := 0; i < b.N; i++ {
+		l := lexer.New(input)
+		p, _ := parser.New(l)
+		_, err := p.Parse()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+}
+func BenchmarkExecOnlyAst(b *testing.B) {
+	input := codeToBench
 	l := lexer.New(input)
 	p, _ := parser.New(l)
-	env := object.NewEnvironment()
-	astProgram, _ := p.Parse()
+	astProgram, err := p.Parse()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewExecAstVisitor().ExecAst(astProgram, env)
+		err := NewExecAstVisitor().ExecAst(astProgram, object.NewEnvironment())
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 }
