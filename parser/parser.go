@@ -406,7 +406,7 @@ func (p *Parser) parseEmptierExpression(terminatedTokens []token.TokenType) (ast
 		return nil, err
 	}
 	if p.currToken.Type == token.LBracket {
-		if err := p.requireTokenSequence([]token.TokenType{token.RBracket}); err != nil {
+		if err := p.requireToken(token.RBracket); err != nil {
 			return nil, err
 		}
 		node.IsArray = true
@@ -496,7 +496,7 @@ func (p *Parser) parseSwitchStatement() (ast.IExpression, error) {
 			return nil, err
 		}
 
-		if err = p.requireTokenSequence([]token.TokenType{token.EOL}); err != nil {
+		if err = p.requireToken(token.EOL); err != nil {
 			return nil, err
 		}
 
@@ -510,7 +510,7 @@ func (p *Parser) parseSwitchStatement() (ast.IExpression, error) {
 	stmt.Cases = cases
 
 	if p.currToken.Type == token.Default {
-		if err = p.requireTokenSequence([]token.TokenType{token.EOL}); err != nil {
+		if err = p.requireToken(token.EOL); err != nil {
 			return nil, err
 		}
 		statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
@@ -584,7 +584,7 @@ func (p *Parser) parseIfEmptyStatement() (ast.IExpression, error) {
 		return nil, err
 	}
 
-	if err := p.requireTokenSequence([]token.TokenType{token.EOL}); err != nil {
+	if err := p.requireToken(token.EOL); err != nil {
 		return nil, err
 	}
 
@@ -702,7 +702,7 @@ func (p *Parser) parseVarAndTypes(endToken token.TokenType, delimiterToken token
 		argument := &ast.VarAndType{Token: p.currToken}
 		arrayTypePrefix := ""
 		if p.currToken.Type == token.LBracket {
-			if err := p.requireTokenSequence([]token.TokenType{token.RBracket}); err != nil {
+			if err := p.requireToken(token.RBracket); err != nil {
 				return nil, err
 			}
 			arrayTypePrefix = "[]"
@@ -811,7 +811,7 @@ func (p *Parser) parseArray(terminatedTokens []token.TokenType) (ast.IExpression
 	node := &ast.Array{Token: p.currToken}
 
 	var err error
-	if err = p.requireTokenSequence([]token.TokenType{token.RBracket}); err != nil {
+	if err = p.requireToken(token.RBracket); err != nil {
 		return nil, err
 	}
 
@@ -934,7 +934,7 @@ func (p *Parser) parseEnumDefinition() (ast.IExpression, error) {
 	}
 	node.Name = name.Value
 
-	if err := p.requireTokenSequence([]token.TokenType{token.LBrace}); err != nil {
+	if err := p.requireToken(token.LBrace); err != nil {
 		return nil, err
 	}
 
@@ -1041,12 +1041,19 @@ func (p *Parser) currTokenIn(tokenTypes []token.TokenType) bool {
 	return false
 }
 
+func (p *Parser) requireToken(tok token.TokenType) error {
+	if err := p.read(); err != nil {
+		return err
+	}
+	if _, err := p.getExpectedToken(tok); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *Parser) requireTokenSequence(tokens []token.TokenType) error {
 	for _, tok := range tokens {
-		if err := p.read(); err != nil {
-			return err
-		}
-		if _, err := p.getExpectedToken(tok); err != nil {
+		if err := p.requireToken(tok); err != nil {
 			return err
 		}
 	}
