@@ -117,6 +117,18 @@ func (p *Parser) read() error {
 	return nil
 }
 
+func (p *Parser) readWithEolOpt() error {
+	if err := p.read(); err != nil {
+		return err
+	}
+	if p.currToken.Type == token.EOL {
+		if err := p.read(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (p *Parser) back() {
 	p.l.BackToToken(p.prevToken)
 	p.nextToken = p.currToken
@@ -721,7 +733,7 @@ func (p *Parser) parseVarAndTypes(endToken token.TokenType, delimiterToken token
 				return nil, err
 			}
 		}
-		if err = p.read(); err != nil {
+		if err = p.readWithEolOpt(); err != nil {
 			return nil, err
 		}
 	}
@@ -757,10 +769,11 @@ func (p *Parser) parseExpressions(closeTokens []token.TokenType) ([]ast.IExpress
 			return nil, err
 		}
 		if p.currToken.Type == token.Comma {
-			if err = p.read(); err != nil {
+			if err = p.readWithEolOpt(); err != nil {
 				return nil, err
 			}
 		}
+
 	}
 
 	return expressions, nil
@@ -881,7 +894,7 @@ func (p *Parser) parseStructExpression(
 		}
 		fields = append(fields, field)
 		if p.currToken.Type == token.Comma {
-			if err = p.read(); err != nil {
+			if err = p.readWithEolOpt(); err != nil {
 				return nil, err
 			}
 		}
@@ -925,14 +938,8 @@ func (p *Parser) parseEnumDefinition() (ast.IExpression, error) {
 		return nil, err
 	}
 
-	if err := p.read(); err != nil {
+	if err := p.readWithEolOpt(); err != nil {
 		return nil, err
-	}
-
-	if p.currToken.Type == token.EOL {
-		if err := p.read(); err != nil {
-			return nil, err
-		}
 	}
 
 	node.Elements = make([]string, 0)
@@ -947,13 +954,7 @@ func (p *Parser) parseEnumDefinition() (ast.IExpression, error) {
 		}
 
 		if p.currToken.Type == token.Comma {
-			if err := p.read(); err != nil {
-				return nil, err
-			}
-		}
-
-		if p.currToken.Type == token.EOL {
-			if err := p.read(); err != nil {
+			if err := p.readWithEolOpt(); err != nil {
 				return nil, err
 			}
 		}
