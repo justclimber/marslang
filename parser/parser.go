@@ -484,19 +484,19 @@ func (p *Parser) parseSwitchStatement() (ast.IExpression, error) {
 			caseBlock.Condition, err = p.parseRightPartOfExpression(
 				stmt.SwitchExpression,
 				Lowest,
-				token.GetTokenTypes(token.Colon),
+				token.GetTokenTypes(token.EOL),
 			)
 		} else {
 			if err = p.read(); err != nil {
 				return nil, err
 			}
-			caseBlock.Condition, err = p.parseExpression(Lowest, token.GetTokenTypes(token.Colon))
+			caseBlock.Condition, err = p.parseExpression(Lowest, token.GetTokenTypes(token.EOL))
 		}
 		if err != nil {
 			return nil, err
 		}
 
-		if err = p.requireTokenSequence([]token.TokenType{token.Colon, token.EOL}); err != nil {
+		if err = p.requireTokenSequence([]token.TokenType{token.EOL}); err != nil {
 			return nil, err
 		}
 
@@ -510,7 +510,7 @@ func (p *Parser) parseSwitchStatement() (ast.IExpression, error) {
 	stmt.Cases = cases
 
 	if p.currToken.Type == token.Default {
-		if err = p.requireTokenSequence([]token.TokenType{token.Colon, token.EOL}); err != nil {
+		if err = p.requireTokenSequence([]token.TokenType{token.EOL}); err != nil {
 			return nil, err
 		}
 		statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))

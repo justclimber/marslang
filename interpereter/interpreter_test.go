@@ -626,22 +626,22 @@ b = a[1]
 func TestExecSwitch(t *testing.T) {
 	input := `a = 10
 switch {
-case a > 20:
+case a > 20
    r = 1
-case a > 10:
+case a > 10
    r = 2
-case a == 0:
+case a == 0
    r = 3
-default:
+default
    r = 5
 }
 
 switch {
-case a < 20:
+case a < 20
    r1 = 1
-case a == 0:
+case a == 0
    r1 = 3
-default:
+default
    r1 = 5
 }
 `
@@ -665,22 +665,22 @@ default:
 func TestExecSwitchWithParam(t *testing.T) {
 	input := `a = 10
 switch a {
-case > 20:
+case > 20
    r = 1
-case > 10:
+case > 10
    r = 2
-case == 0:
+case == 0
    r = 3
-default:
+default
    r = 5
 }
 
 switch a {
-case < 20:
+case < 20
    r1 = 1
-case == 0:
+case == 0
    r1 = 3
-default:
+default
    r1 = 5
 }
 `
