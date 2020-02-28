@@ -83,6 +83,8 @@ func getLangObject(t interface{}) Object {
 		return &Integer{Value: int64(tt)}
 	case int32:
 		return &Integer{Value: int64(tt)}
+	case uint32:
+		return &Integer{Value: int64(tt)}
 	case bool:
 		return &Boolean{Value: tt}
 	default:
