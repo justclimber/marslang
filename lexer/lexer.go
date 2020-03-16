@@ -1,7 +1,8 @@
 package lexer
 
 import (
-	"aakimov/marslang/token"
+	"github.com/justclimber/marslang/token"
+
 	"errors"
 	"fmt"
 	"unicode"

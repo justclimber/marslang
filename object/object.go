@@ -1,7 +1,8 @@
 package object
 
 import (
-	"aakimov/marslang/ast"
+	"github.com/justclimber/marslang/ast"
+
 	"bytes"
 	"fmt"
 	"strings"

@@ -1,10 +1,12 @@
 package parser
 
 import (
-	"aakimov/marslang/ast"
-	"aakimov/marslang/lexer"
+	"github.com/justclimber/marslang/ast"
+	"github.com/justclimber/marslang/lexer"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"testing"
 )
 

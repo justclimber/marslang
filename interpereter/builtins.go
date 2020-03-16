@@ -1,10 +1,10 @@
 package interpereter
 
 import (
-	"aakimov/marslang/object"
-	"math"
+	"github.com/justclimber/marslang/object"
 
 	"fmt"
+	"math"
 )
 
 func AbsInt64(n int64) int64 {

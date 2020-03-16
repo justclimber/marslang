@@ -1,8 +1,9 @@
 package interpereter
 
 import (
-	"aakimov/marslang/object"
-	"aakimov/marslang/token"
+	"github.com/justclimber/marslang/object"
+	"github.com/justclimber/marslang/token"
+
 	"fmt"
 )
 

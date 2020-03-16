@@ -1,10 +1,11 @@
 package main
 
 import (
-	"aakimov/marslang/interpereter"
-	"aakimov/marslang/lexer"
-	"aakimov/marslang/object"
-	"aakimov/marslang/parser"
+	"github.com/justclimber/marslang/interpereter"
+	"github.com/justclimber/marslang/lexer"
+	"github.com/justclimber/marslang/object"
+	"github.com/justclimber/marslang/parser"
+
 	"fmt"
 	"io/ioutil"
 	"log"

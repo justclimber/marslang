@@ -1,11 +1,13 @@
 package interpereter
 
 import (
-	"aakimov/marslang/lexer"
-	"aakimov/marslang/object"
-	"aakimov/marslang/parser"
+	"github.com/justclimber/marslang/lexer"
+	"github.com/justclimber/marslang/object"
+	"github.com/justclimber/marslang/parser"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"log"
 	"testing"
 )

@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"aakimov/marslang/token"
+	"github.com/justclimber/marslang/token"
 )
 
 type expectedTestToken struct {

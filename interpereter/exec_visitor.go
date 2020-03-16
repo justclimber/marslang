@@ -1,9 +1,9 @@
 package interpereter
 
 import (
-	"aakimov/marslang/ast"
-	"aakimov/marslang/object"
-	"aakimov/marslang/token"
+	"github.com/justclimber/marslang/ast"
+	"github.com/justclimber/marslang/object"
+	"github.com/justclimber/marslang/token"
 )
 
 type ExecAstVisitor struct {

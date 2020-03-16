@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"aakimov/marslang/token"
+	"github.com/justclimber/marslang/token"
 )
 
 type INode interface {

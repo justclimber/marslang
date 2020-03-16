@@ -1,9 +1,10 @@
 package parser
 
 import (
-	"aakimov/marslang/ast"
-	"aakimov/marslang/lexer"
-	"aakimov/marslang/token"
+	"github.com/justclimber/marslang/ast"
+	"github.com/justclimber/marslang/lexer"
+	"github.com/justclimber/marslang/token"
+
 	"errors"
 	"fmt"
 	"strconv"
