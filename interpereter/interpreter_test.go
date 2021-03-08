@@ -339,6 +339,34 @@ b = 5
 	require.False(t, ok)
 }
 
+func TestExecEmptyBuiltin(t *testing.T) {
+	input := `a = ?int
+if empty(a) {
+b = 5
+}
+`
+	env := testExecAngGetEnv(t, input)
+
+	varB, ok := env.Get("b")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varB)
+}
+
+func TestExecIfAndSimpleBoolean(t *testing.T) {
+	input := `a = true
+if a {
+b = 5
+}
+`
+	env := testExecAngGetEnv(t, input)
+
+	varB, ok := env.Get("b")
+
+	require.True(t, ok)
+	require.IsType(t, &object.Integer{}, varB)
+}
+
 func TestExecIfStatement(t *testing.T) {
 	input := `if 4 == 3 {
     a = 10

@@ -37,13 +37,13 @@ func (e *ExecAstVisitor) setupBasicBuiltinFunctions() {
 		Fn: func(env *object.Environment, args []object.Object) (object.Object, error) {
 			switch arg := args[0].(type) {
 			case *object.Struct:
-				return &object.Boolean{Value: arg.Empty}, nil
+				return nativeBooleanToBoolean(arg.Empty), nil
 			case *object.Integer:
-				return &object.Boolean{Value: arg.Empty}, nil
+				return nativeBooleanToBoolean(arg.Empty), nil
 			case *object.Float:
-				return &object.Boolean{Value: arg.Empty}, nil
+				return nativeBooleanToBoolean(arg.Empty), nil
 			case *object.Array:
-				return &object.Boolean{Value: arg.Empty}, nil
+				return nativeBooleanToBoolean(arg.Empty), nil
 			default:
 				return nil, BuiltinFuncError("Type '%T' doesn't support emptiness", arg)
 			}
