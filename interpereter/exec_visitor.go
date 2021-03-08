@@ -90,8 +90,6 @@ func (e *ExecAstVisitor) execStatement(node ast.IStatement, env *object.Environm
 		return e.execReturn(astNode, env)
 	case *ast.IfStatement:
 		return e.execIfStatement(astNode, env)
-	case *ast.IfEmptyStatement:
-		return e.execIfEmptyStatement(astNode, env)
 	case *ast.Switch:
 		return e.execSwitch(astNode, env)
 	case *ast.FunctionCall:
@@ -390,32 +388,6 @@ func (e *ExecAstVisitor) execIfStatement(node *ast.IfStatement, env *object.Envi
 	} else {
 		return nil, nil
 	}
-}
-
-func (e *ExecAstVisitor) execIfEmptyStatement(node *ast.IfEmptyStatement, env *object.Environment) (object.Object, error) {
-	e.execCallback(Operation{Type: IfStmt})
-	assignmentResult, err := e.execAssignment(node.Assignment, env)
-	if err != nil {
-		return nil, err
-	}
-	isEmpty := false
-	switch obj := assignmentResult.(type) {
-	case *object.Integer:
-		isEmpty = obj.Empty
-	case *object.Float:
-		isEmpty = obj.Empty
-	case *object.Array:
-		isEmpty = obj.Empty
-	case *object.Struct:
-		isEmpty = obj.Empty
-	default:
-		return nil, runtimeError(node, "Type '%s' can't be empty", assignmentResult.Type())
-	}
-
-	if isEmpty {
-		return e.execStatementsBlock(node.EmptyBranch, env)
-	}
-	return nil, nil
 }
 
 func (e *ExecAstVisitor) execArray(node *ast.Array, env *object.Environment) (object.Object, error) {

@@ -114,12 +114,6 @@ type IfStatement struct {
 	ElseBranch     *StatementsBlock
 }
 
-type IfEmptyStatement struct {
-	Token       token.Token
-	Assignment  *Assignment
-	EmptyBranch *StatementsBlock
-}
-
 type EnumDefinition struct {
 	Token    token.Token
 	Name     string
@@ -178,7 +172,6 @@ func (node *Function) GetToken() token.Token              { return node.Token }
 func (node *VarAndType) GetToken() token.Token            { return node.Token }
 func (node *FunctionCall) GetToken() token.Token          { return node.Token }
 func (node *IfStatement) GetToken() token.Token           { return node.Token }
-func (node *IfEmptyStatement) GetToken() token.Token      { return node.Token }
 func (node *StructDefinition) GetToken() token.Token      { return node.Token }
 func (node *Struct) GetToken() token.Token                { return node.Token }
 func (node *StructFieldCall) GetToken() token.Token       { return node.Token }

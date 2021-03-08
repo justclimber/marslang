@@ -187,8 +187,6 @@ func (p *Parser) parseStatement() (ast.IStatement, error) {
 		return p.parseReturn()
 	case token.If:
 		return p.parseIfStatement()
-	case token.IfEmpty:
-		return p.parseIfEmptyStatement()
 	case token.Struct:
 		return p.parseStructDefinition()
 	case token.Enum:
@@ -567,42 +565,6 @@ func (p *Parser) parseIfStatement() (ast.IExpression, error) {
 
 	statements, err = p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
 	stmt.ElseBranch = &ast.StatementsBlock{Statements: statements}
-
-	return stmt, err
-}
-
-func (p *Parser) parseIfEmptyStatement() (ast.IExpression, error) {
-	stmt := &ast.IfEmptyStatement{Token: p.currToken}
-
-	var err error
-
-	if err = p.read(); err != nil {
-		return nil, err
-	}
-
-	stmt.Assignment, err = p.parseAssignment(token.GetTokenTypes(token.LBrace))
-	if err != nil {
-		return nil, err
-	}
-
-	if err := p.requireToken(token.EOL); err != nil {
-		return nil, err
-	}
-
-	if err = p.read(); err != nil {
-		return nil, err
-	}
-
-	statements, err := p.parseBlockOfStatements(token.GetTokenTypes(token.RBrace))
-	if err != nil {
-		return nil, err
-	}
-
-	stmt.EmptyBranch = &ast.StatementsBlock{Statements: statements}
-
-	if err = p.read(); err != nil {
-		return nil, err
-	}
 
 	return stmt, err
 }
